@@ -52,18 +52,22 @@ public class GitHubImportJob {
         else {
           List<Object> results = (List<Object>) resultMessage.get("results");
           System.out.println("Result size: " + results.size());
-          ObjectMapper mapper = new ObjectMapper();
-          try {
-            BufferedWriter writer = Files.newBufferedWriter(Paths.get(output + interval++ + ".json"),
-              StandardCharsets.UTF_8, StandardOpenOption.CREATE);
-            mapper.writeValue(writer, results);
-            writer.close();
+          if (results.size() > 0) {
+            ObjectMapper mapper = new ObjectMapper();
+            try {
+              BufferedWriter writer = Files.newBufferedWriter(Paths.get(output + interval++ + ".json"),
+                StandardCharsets.UTF_8, StandardOpenOption.CREATE);
+              mapper.writeValue(writer, results);
+              writer.close();
+            }
+            catch (IOException e) {
+              e.printStackTrace(System.err);
+            }
           }
-          catch (IOException e) {
-            e.printStackTrace(System.err);
-          }
+
         }
       }
+      
       if (progress.isFinished()) {
         latch.countDown();
       }
