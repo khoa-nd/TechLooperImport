@@ -84,7 +84,7 @@ public class GitHubImportJob {
 
   private static void doQuery(String country, ImportIO client, MessageCallback messageCallback,
                               Map<String, Object> queryInput, List<UUID> connectorGuids, String urlTemplate,
-                              String createdFrom, String createdTo) throws IOException {
+                              String createdFrom, String createdTo) throws IOException, InterruptedException {
     synchronized (hasNextPage) {
       hasNextPage[0] = Boolean.TRUE;
     }
@@ -97,6 +97,7 @@ public class GitHubImportJob {
       query.setConnectorGuids(connectorGuids);
       query.setInput(queryInput);
       client.query(query, messageCallback);
+      Thread.sleep(3000);
     }
   }
 }
