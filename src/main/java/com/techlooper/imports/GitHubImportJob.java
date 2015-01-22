@@ -36,7 +36,7 @@ public class GitHubImportJob {
       if (message.getType() == QueryMessage.MessageType.MESSAGE) {
         HashMap<String, Object> resultMessage = (HashMap<String, Object>) message.getData();
         if (((List) resultMessage.get("results")).size() == 0 || resultMessage.containsKey("errorType")) {
-          System.out.println("Stop it");
+          System.out.println("Error => Stop query: " + query.getInput().get("webpage/url"));
           synchronized (hasNextPage) {
             hasNextPage[0] = Boolean.FALSE;
           }
@@ -82,7 +82,7 @@ public class GitHubImportJob {
     synchronized (hasNextPage) {
       hasNextPage[0] = Boolean.TRUE;
     }
-    
+
     for (int i = 1; i < 101 && hasNextPage[0]; i++) {
       String queryUrl = String.format(urlTemplate, i, country, createdFrom, createdTo);
       System.out.println("Query using url: " + queryUrl);
