@@ -39,6 +39,11 @@
       <artifactId>com.importio.api.clientlite</artifactId>
       <version>2.0.0</version>
     </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+      <version>2.4.4</version>
+    </dependency>
   </dependencies>
 
   <build>
@@ -67,6 +72,7 @@
               <mainClass>com.techlooper.imports.GitHubImportJob</mainClass>
               <arguments>
                 <argument>${country}</argument>
+                <argument>${output}</argument>
               </arguments>
             </configuration>
           </execution>

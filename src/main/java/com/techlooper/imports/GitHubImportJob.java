@@ -1,11 +1,13 @@
 package com.techlooper.imports;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.importio.api.clientlite.ImportIO;
 import com.importio.api.clientlite.MessageCallback;
 import com.importio.api.clientlite.data.Query;
 import com.importio.api.clientlite.data.QueryMessage;
 import com.techlooper.utils.PropertyManager;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
@@ -18,12 +20,13 @@ public class GitHubImportJob {
   private static final Boolean[] hasNextPage = {Boolean.TRUE};
 
   public static void main(String[] args) throws IOException, InterruptedException {
-    if (args.length != 1) {
-      System.out.println("Usage example: mvn clean install -Dcountry=vietnam");
+    if (args.length != 2) {
+      System.out.println("Usage example: mvn clean install -Dcountry=vietnam -Doutput=vietnam-users.json");
       return;
     }
 
     String country = args[0];
+    String output = args[1];
 
     UUID userId = UUID.fromString(PropertyManager.properties.getProperty("import.io.userId"));
     ImportIO client = new ImportIO(userId, PropertyManager.properties.getProperty("import.io.apiKey"));
@@ -73,6 +76,9 @@ public class GitHubImportJob {
     System.out.println("All data received:");
     System.out.println(dataRows.size());
     System.out.println(dataRows);
+
+    ObjectMapper mapper = new ObjectMapper();
+    mapper.writeValue(new File(output), dataRows);
     System.exit(0);
   }
 
