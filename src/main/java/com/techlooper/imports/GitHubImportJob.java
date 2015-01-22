@@ -15,6 +15,8 @@ import java.util.concurrent.CountDownLatch;
  */
 public class GitHubImportJob {
 
+  private static final Boolean[] hasNextPage = {Boolean.TRUE};
+
   public static void main(String[] args) throws IOException, InterruptedException {
     if (args.length != 1) {
       System.out.println("Usage example: mvn clean install -Dcountry=vietnam");
@@ -30,12 +32,14 @@ public class GitHubImportJob {
     CountDownLatch latch = new CountDownLatch(1);
 
     List<Object> dataRows = new ArrayList<>();
-
     MessageCallback messageCallback = (query, message, progress) -> {
       if (message.getType() == QueryMessage.MessageType.MESSAGE) {
         HashMap<String, Object> resultMessage = (HashMap<String, Object>) message.getData();
-        if (resultMessage.containsKey("errorType")) {
-          System.err.println(message.toString());
+        if (((List) resultMessage.get("results")).size() == 0 || resultMessage.containsKey("errorType")) {
+          System.out.println("Stop it");
+          synchronized (hasNextPage) {
+            hasNextPage[0] = Boolean.FALSE;
+          }
         }
         else {
           List<Object> results = (List<Object>) resultMessage.get("results");
@@ -72,8 +76,14 @@ public class GitHubImportJob {
     System.exit(0);
   }
 
-  private static void doQuery(String country, ImportIO client, MessageCallback messageCallback, Map<String, Object> queryInput, List<UUID> connectorGuids, String urlTemplate, String createdFrom, String createdTo) throws IOException {
-    for (int i = 1; i < 5; i++) {
+  private static void doQuery(String country, ImportIO client, MessageCallback messageCallback,
+                              Map<String, Object> queryInput, List<UUID> connectorGuids, String urlTemplate,
+                              String createdFrom, String createdTo) throws IOException {
+    synchronized (hasNextPage) {
+      hasNextPage[0] = Boolean.TRUE;
+    }
+    
+    for (int i = 1; i < 101 && hasNextPage[0]; i++) {
       String queryUrl = String.format(urlTemplate, i, country, createdFrom, createdTo);
       System.out.println("Query using url: " + queryUrl);
       queryInput.put("webpage/url", queryUrl);

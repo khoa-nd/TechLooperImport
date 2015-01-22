@@ -16,7 +16,7 @@ public class PropertyManager {
     try {
       URL res = PropertyManager.class.getClassLoader().getResource("application.properties");
       properties.load(res.openStream());
-      System.out.println(String.format("Loaded properties at path: {}", res.getPath()));
+      System.out.println(String.format("Loaded properties at path: %s", res.getPath()));
     }
     catch (Exception e) {
       System.err.println("Failed to load properties file");
