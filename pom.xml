@@ -220,4 +220,11 @@
       </plugin>
     </plugins>
   </reporting>
+    <dependencies>
+        <dependency>
+            <groupId>com.importio</groupId>
+            <artifactId>com.importio.api.clientlite</artifactId>
+            <version>2.0.0</version>
+        </dependency>
+    </dependencies>
 </project>
