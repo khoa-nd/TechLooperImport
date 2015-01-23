@@ -14,6 +14,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.*;
+import java.util.concurrent.CountDownLatch;
 
 /**
  * Created by phuonghqh on 1/22/15.
@@ -37,7 +38,7 @@ public class GitHubImportJob {
     ImportIO client = new ImportIO(userId, PropertyManager.properties.getProperty("import.io.apiKey"));
     client.connect();
 
-//    CountDownLatch latch = new CountDownLatch(1);
+    CountDownLatch latch = new CountDownLatch(1);
 
     MessageCallback messageCallback = (query, message, progress) -> {
       if (message.getType() == QueryMessage.MessageType.MESSAGE) {
@@ -75,10 +76,10 @@ public class GitHubImportJob {
         }
       }
 
-//      if (progress.isFinished()) {
-//        System.out.println("Process is finished.");
-//        latch.countDown();
-//      }
+      if (progress.isFinished()) {
+        System.out.println("Process is finished.");
+        latch.countDown();
+      }
     };
 
     Map<String, Object> queryInput = new HashMap<>();
@@ -98,7 +99,6 @@ public class GitHubImportJob {
 //    latch.await();
 
     client.disconnect();
-//    System.exit(0);
   }
 
   private static void doQuery(String country, ImportIO client, MessageCallback messageCallback,
