@@ -21,9 +21,9 @@
     </issueManagement>
 
     <scm>
-        <url>https://github.com/khoa-nd/TechLooperImport</url>
-        <connection>scm:git:git://github.com/khoa-nd/TechLooperImport.git</connection>
-        <developerConnection>scm:git:git@github.com/khoa-nd/TechLooperImport.git</developerConnection>
+        <url>https://github.com/chrisshayan/TechLooperImport</url>
+        <connection>scm:git:git://github.com/chrisshayan/TechLooperImport.git</connection>
+        <developerConnection>scm:git:git@github.com/chrisshayan/TechLooperImport.git</developerConnection>
     </scm>
 
     <properties>
