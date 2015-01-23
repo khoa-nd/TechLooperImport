@@ -14,7 +14,6 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.*;
-import java.util.concurrent.CountDownLatch;
 
 /**
  * Created by phuonghqh on 1/22/15.
@@ -38,39 +37,48 @@ public class GitHubImportJob {
     ImportIO client = new ImportIO(userId, PropertyManager.properties.getProperty("import.io.apiKey"));
     client.connect();
 
-    CountDownLatch latch = new CountDownLatch(1);
+//    CountDownLatch latch = new CountDownLatch(1);
 
     MessageCallback messageCallback = (query, message, progress) -> {
       if (message.getType() == QueryMessage.MessageType.MESSAGE) {
         HashMap<String, Object> resultMessage = (HashMap<String, Object>) message.getData();
+        String queryUrl = query.getInput().get("webpage/url").toString();
         if (((List) resultMessage.get("results")).size() == 0 || resultMessage.containsKey("errorType")) {
-          System.out.println("Error => Stop query: " + query.getInput().get("webpage/url"));
+          System.out.println("Error => Stop query: " + queryUrl);
           synchronized (hasNextPage) {
             hasNextPage[0] = Boolean.FALSE;
           }
         }
         else {
           List<Object> results = (List<Object>) resultMessage.get("results");
+
+          System.out.println("Success => query: " + queryUrl);
           System.out.println("Result size: " + results.size());
           if (results.size() > 0) {
             ObjectMapper mapper = new ObjectMapper();
             try {
-              BufferedWriter writer = Files.newBufferedWriter(Paths.get(output + interval++ + ".json"),
+//              synchronized (interval) {
+              String page = queryUrl.substring(queryUrl.indexOf("p=") + "p=".length(), queryUrl.indexOf("p=") + 3);
+              String period = queryUrl.substring(queryUrl.indexOf("created:") + "created:".length(), queryUrl.indexOf("created:") + 30);
+              BufferedWriter writer = Files.newBufferedWriter(Paths.get(output + period + "." + page + ".json"),
                 StandardCharsets.UTF_8, StandardOpenOption.CREATE);
               mapper.writeValue(writer, results);
               writer.close();
+
+//                System.out.println("Success saved => query: " + queryUrl + ", file-name-interval: " + interval);
+//              }
             }
             catch (IOException e) {
               e.printStackTrace(System.err);
             }
           }
-
         }
       }
-      
-      if (progress.isFinished()) {
-        latch.countDown();
-      }
+
+//      if (progress.isFinished()) {
+//        System.out.println("Process is finished.");
+//        latch.countDown();
+//      }
     };
 
     Map<String, Object> queryInput = new HashMap<>();
@@ -87,10 +95,10 @@ public class GitHubImportJob {
       doQuery(country, client, messageCallback, queryInput, connectorGuids, urlTemplate, createdFrom, createdTo);
     }
 
-    latch.await();
+//    latch.await();
 
     client.disconnect();
-    System.exit(0);
+//    System.exit(0);
   }
 
   private static void doQuery(String country, ImportIO client, MessageCallback messageCallback,
@@ -108,6 +116,7 @@ public class GitHubImportJob {
       query.setConnectorGuids(connectorGuids);
       query.setInput(queryInput);
       client.query(query, messageCallback);
+      Thread.sleep(3000);
     }
   }
 }
