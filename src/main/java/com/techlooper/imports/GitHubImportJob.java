@@ -7,8 +7,12 @@ import com.importio.api.clientlite.data.Query;
 import com.importio.api.clientlite.data.QueryMessage;
 import com.techlooper.utils.PropertyManager;
 
-import java.io.File;
+import java.io.BufferedWriter;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
 
@@ -19,14 +23,16 @@ public class GitHubImportJob {
 
   private static final Boolean[] hasNextPage = {Boolean.TRUE};
 
+  private static Integer interval = 0;
+
   public static void main(String[] args) throws IOException, InterruptedException {
     if (args.length != 2) {
-      System.out.println("Usage example: mvn clean install -Dcountry=vietnam -Doutput=vietnam-users.json");
+      System.out.println("Usage example: mvn clean install -Dcountry=vietnam -DoutputDirectory=/techlooper/github/vietnam/");
       return;
     }
 
     String country = args[0];
-    String output = args[1];
+    String output = args[1].endsWith("/") ? args[1] : args[1] + "/";
 
     UUID userId = UUID.fromString(PropertyManager.properties.getProperty("import.io.userId"));
     ImportIO client = new ImportIO(userId, PropertyManager.properties.getProperty("import.io.apiKey"));
@@ -34,7 +40,6 @@ public class GitHubImportJob {
 
     CountDownLatch latch = new CountDownLatch(1);
 
-    List<Object> dataRows = new ArrayList<>();
     MessageCallback messageCallback = (query, message, progress) -> {
       if (message.getType() == QueryMessage.MessageType.MESSAGE) {
         HashMap<String, Object> resultMessage = (HashMap<String, Object>) message.getData();
@@ -47,9 +52,22 @@ public class GitHubImportJob {
         else {
           List<Object> results = (List<Object>) resultMessage.get("results");
           System.out.println("Result size: " + results.size());
-          dataRows.addAll(results);
+          if (results.size() > 0) {
+            ObjectMapper mapper = new ObjectMapper();
+            try {
+              BufferedWriter writer = Files.newBufferedWriter(Paths.get(output + interval++ + ".json"),
+                StandardCharsets.UTF_8, StandardOpenOption.CREATE);
+              mapper.writeValue(writer, results);
+              writer.close();
+            }
+            catch (IOException e) {
+              e.printStackTrace(System.err);
+            }
+          }
+
         }
       }
+      
       if (progress.isFinished()) {
         latch.countDown();
       }
@@ -72,13 +90,6 @@ public class GitHubImportJob {
     latch.await();
 
     client.disconnect();
-
-    System.out.println("All data received:");
-    System.out.println(dataRows.size());
-    System.out.println(dataRows);
-
-    ObjectMapper mapper = new ObjectMapper();
-    mapper.writeValue(new File(output), dataRows);
     System.exit(0);
   }
 
@@ -97,7 +108,6 @@ public class GitHubImportJob {
       query.setConnectorGuids(connectorGuids);
       query.setInput(queryInput);
       client.query(query, messageCallback);
-      Thread.sleep(3000);
     }
   }
 }
