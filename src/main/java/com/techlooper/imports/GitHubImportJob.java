@@ -55,10 +55,12 @@ public class GitHubImportJob {
           if (results.size() > 0) {
             ObjectMapper mapper = new ObjectMapper();
             try {
-              BufferedWriter writer = Files.newBufferedWriter(Paths.get(output + interval++ + ".json"),
-                StandardCharsets.UTF_8, StandardOpenOption.CREATE);
-              mapper.writeValue(writer, results);
-              writer.close();
+                synchronized (interval) {
+                    BufferedWriter writer = Files.newBufferedWriter(Paths.get(output + interval++ + ".json"),
+                      StandardCharsets.UTF_8, StandardOpenOption.CREATE);
+                    mapper.writeValue(writer, results);
+                    writer.close();
+                }
             }
             catch (IOException e) {
               e.printStackTrace(System.err);
@@ -90,7 +92,6 @@ public class GitHubImportJob {
     latch.await();
 
     client.disconnect();
-    System.exit(0);
   }
 
   private static void doQuery(String country, ImportIO client, MessageCallback messageCallback,
@@ -108,6 +109,7 @@ public class GitHubImportJob {
       query.setConnectorGuids(connectorGuids);
       query.setInput(queryInput);
       client.query(query, messageCallback);
+      Thread.sleep(3000);
     }
   }
 }
