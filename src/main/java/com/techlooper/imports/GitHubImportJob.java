@@ -77,7 +77,7 @@ public class GitHubImportJob {
       while ((line = rd.readLine()) != null) {
         content.append(line);
       }
-      System.out.println("Response: " + content);
+
       if (content.indexOf("I/O Error getting page.") > 0) {
         System.out.println("I/O Error getting page => try it again.");
         continue;
