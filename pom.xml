@@ -72,7 +72,7 @@
               <mainClass>com.techlooper.imports.GitHubImportJob</mainClass>
               <arguments>
                 <argument>${country}</argument>
-                <argument>${output}</argument>
+                <argument>${outputDirectory}</argument>
               </arguments>
             </configuration>
           </execution>
