@@ -32,12 +32,21 @@ public class GitHubImportJob {
 //  private static final CountDownLatch latch = new CountDownLatch(1000000);
 
   public static void main(String[] args) throws IOException, InterruptedException {
-    String country = args[0];
+
+    final String[] countries = {"vietnam", "japan", "thailand", "singapore", "malaysia", "indonasia", "australia", "china", "india", "korea", "taiwan",
+            "spain", "ukraine", "poland", "russia", "bulgaria", "turkey", "greece", "serbia", "romania", "belarus", "lithuania", "estonia",
+            "italy", "portugal", "colombia", "brazil", "chile", "argentina", "venezuela", "bolivia", "mexico"};
 
     int currentYear = Calendar.getInstance(Locale.US).get(Calendar.YEAR);
-    for (int year = 2007; year <= currentYear; ++year) {
-      doQuery(country, year + "-01-01", year + "-06-30");
-      doQuery(country, year + "-07-01", year + "-12-31");
+
+    for(String country : countries) {
+      for (int year = 2007; year <= currentYear; ++year) {
+        doQuery(country, year + "-01-01", year + "-06-30");
+        Thread.sleep(2000);
+        doQuery(country, year + "-07-01", year + "-12-31");
+        Thread.sleep(2000);
+      }
+      Thread.sleep(5000);
     }
   }
 
@@ -56,7 +65,7 @@ public class GitHubImportJob {
 
       HttpClient httpClient = HttpClients.createDefault();
       HttpPost p = new HttpPost(String.format("https://api.import.io/store/data/%s/_query?_user=%s&_apikey=%s",
-        connectorId, userId, URLEncoder.encode(apiKey, "UTF-8")));
+              connectorId, userId, URLEncoder.encode(apiKey, "UTF-8")));
 
       String json = String.format("{ \"input\": {\"webpage/url\": \"%s\"} }", queryUrl);
       p.setEntity(new StringEntity(json, ContentType.create("application/json")));
@@ -72,8 +81,7 @@ public class GitHubImportJob {
       if (content.indexOf("I/O Error getting page.") > 0) {
         System.out.println("I/O Error getting page => try it again.");
         continue;
-      }
-      else {
+      } else {
         ++pageNumber;
       }
 
@@ -99,8 +107,7 @@ public class GitHubImportJob {
         BufferedWriter writer = Files.newBufferedWriter(Paths.get(filename), StandardCharsets.UTF_8, StandardOpenOption.CREATE);
         writer.write(json);
         writer.close();
-      }
-      catch (IOException e) {
+      } catch (IOException e) {
         e.printStackTrace(System.err);
       }
     }
