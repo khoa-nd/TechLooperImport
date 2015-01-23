@@ -21,102 +21,88 @@ import java.util.concurrent.CountDownLatch;
  */
 public class GitHubImportJob {
 
-  private static final Boolean[] hasNextPage = {Boolean.TRUE};
+    public static void main(String[] args) throws IOException, InterruptedException {
+        final String[] countries = {"thailand", "singapore", "malaysia", "indonasia", "australia", "china", "india", "korea", "taiwan",
+                "spain", "ukraine", "poland", "russia", "bulgaria", "turkey", "greece", "serbia", "romania", "belarus", "lithuania", "estonia",
+                "italy", "portugal", "colombia", "brazil", "chile", "argentina", "venezuela", "bolivia", "mexico"};
 
-  private static Integer interval = 0;
-
-  public static void main(String[] args) throws IOException, InterruptedException {
-    if (args.length != 2) {
-      System.out.println("Usage example: mvn clean install -Dcountry=vietnam -DoutputDirectory=/techlooper/github/vietnam/");
-      return;
+        for (final String country : countries) {
+            crawlPerCountry(country);
+            Thread.sleep(3000);
+        }
     }
 
-    String country = args[0];
-    String output = args[1].endsWith("/") ? args[1] : args[1] + "/";
+    private static void crawlPerCountry(String country) throws IOException, InterruptedException {
+        UUID userId = UUID.fromString(PropertyManager.properties.getProperty("import.io.userId"));
+        ImportIO client = new ImportIO(userId, PropertyManager.properties.getProperty("import.io.apiKey"));
+        client.connect();
 
-    UUID userId = UUID.fromString(PropertyManager.properties.getProperty("import.io.userId"));
-    ImportIO client = new ImportIO(userId, PropertyManager.properties.getProperty("import.io.apiKey"));
-    client.connect();
+        CountDownLatch latch = new CountDownLatch(1);
 
-    CountDownLatch latch = new CountDownLatch(1);
+        MessageCallback messageCallback = (query, message, progress) -> {
+            if (message.getType() == QueryMessage.MessageType.MESSAGE) {
+                HashMap<String, Object> resultMessage = (HashMap<String, Object>) message.getData();
+                String queryUrl = query.getInput().get("webpage/url").toString();
+                if (((List) resultMessage.get("results")).size() == 0 || resultMessage.containsKey("errorType")) {
+                    System.out.println("Error => Stop query: " + queryUrl);
+                } else {
+                    List<Object> results = (List<Object>) resultMessage.get("results");
 
-    MessageCallback messageCallback = (query, message, progress) -> {
-      if (message.getType() == QueryMessage.MessageType.MESSAGE) {
-        HashMap<String, Object> resultMessage = (HashMap<String, Object>) message.getData();
-        String queryUrl = query.getInput().get("webpage/url").toString();
-        if (((List) resultMessage.get("results")).size() == 0 || resultMessage.containsKey("errorType")) {
-          System.out.println("Error => Stop query: " + queryUrl);
-          synchronized (hasNextPage) {
-            hasNextPage[0] = Boolean.FALSE;
-          }
-        }
-        else {
-          List<Object> results = (List<Object>) resultMessage.get("results");
-
-          System.out.println("Success => query: " + queryUrl);
-          System.out.println("Result size: " + results.size());
-          if (results.size() > 0) {
-            ObjectMapper mapper = new ObjectMapper();
-            try {
-//              synchronized (interval) {
-              String page = queryUrl.substring(queryUrl.indexOf("p=") + "p=".length(), queryUrl.indexOf("p=") + 3);
-              String period = queryUrl.substring(queryUrl.indexOf("created:") + "created:".length(), queryUrl.indexOf("created:") + 30);
-              BufferedWriter writer = Files.newBufferedWriter(Paths.get(output + period + "." + page + ".json"),
-                StandardCharsets.UTF_8, StandardOpenOption.CREATE);
-              mapper.writeValue(writer, results);
-              writer.close();
-
-//                System.out.println("Success saved => query: " + queryUrl + ", file-name-interval: " + interval);
-//              }
+                    System.out.println("Success => query: " + queryUrl);
+                    System.out.println("Result size: " + results.size());
+                    if (results.size() > 0) {
+                        ObjectMapper mapper = new ObjectMapper();
+                        try {
+                            String page = queryUrl.substring(queryUrl.indexOf("p=") + "p=".length(), queryUrl.indexOf("p=") + 3);
+                            String period = queryUrl.substring(queryUrl.indexOf("created:") + "created:".length(), queryUrl.indexOf("created:") + 30);
+                            BufferedWriter writer = Files.newBufferedWriter(Paths.get(String.format("%s.%s.%s.json", country, period, page)),
+                                    StandardCharsets.UTF_8, StandardOpenOption.CREATE);
+                            mapper.writeValue(writer, results);
+                            writer.close();
+                        } catch (IOException e) {
+                            e.printStackTrace(System.err);
+                        }
+                    }
+                }
             }
-            catch (IOException e) {
-              e.printStackTrace(System.err);
+
+            if (progress.isFinished()) {
+                System.out.println("Process is finished.");
+                latch.countDown();
             }
-          }
+        };
+
+        Map<String, Object> queryInput = new HashMap<>();
+        List<UUID> connectorGuids = Arrays.asList(UUID.fromString(PropertyManager.properties.getProperty("import.io.connector.github")));
+
+        String urlTemplate = PropertyManager.properties.getProperty("github.user.searchTemplate");
+        int currentYear = Calendar.getInstance(Locale.US).get(Calendar.YEAR);
+        for (int year = 2007; year <= currentYear; ++year) {
+            String createdFrom = year + "-01-01";
+            String createdTo = year + "-06-30";
+            doQuery(country, client, messageCallback, queryInput, connectorGuids, urlTemplate, createdFrom, createdTo);
+            createdFrom = year + "-07-01";
+            createdTo = year + "-12-31";
+            doQuery(country, client, messageCallback, queryInput, connectorGuids, urlTemplate, createdFrom, createdTo);
         }
-      }
-
-      if (progress.isFinished()) {
-        System.out.println("Process is finished.");
-        latch.countDown();
-      }
-    };
-
-    Map<String, Object> queryInput = new HashMap<>();
-    List<UUID> connectorGuids = Arrays.asList(UUID.fromString(PropertyManager.properties.getProperty("import.io.connector.github")));
-
-    String urlTemplate = PropertyManager.properties.getProperty("github.user.searchTemplate");
-    int currentYear = Calendar.getInstance(Locale.US).get(Calendar.YEAR);
-    for (int year = 2007; year <= currentYear; ++year) {
-      String createdFrom = year + "-01-01";
-      String createdTo = year + "-06-30";
-      doQuery(country, client, messageCallback, queryInput, connectorGuids, urlTemplate, createdFrom, createdTo);
-      createdFrom = year + "-07-01";
-      createdTo = year + "-12-31";
-      doQuery(country, client, messageCallback, queryInput, connectorGuids, urlTemplate, createdFrom, createdTo);
-    }
 
 //    latch.await();
 
-    client.disconnect();
-  }
-
-  private static void doQuery(String country, ImportIO client, MessageCallback messageCallback,
-                              Map<String, Object> queryInput, List<UUID> connectorGuids, String urlTemplate,
-                              String createdFrom, String createdTo) throws IOException, InterruptedException {
-    synchronized (hasNextPage) {
-      hasNextPage[0] = Boolean.TRUE;
+        client.disconnect();
     }
 
-    for (int i = 1; i < 101 && hasNextPage[0]; i++) {
-      String queryUrl = String.format(urlTemplate, i, country, createdFrom, createdTo);
-      System.out.println("Query using url: " + queryUrl);
-      queryInput.put("webpage/url", queryUrl);
-      Query query = new Query();
-      query.setConnectorGuids(connectorGuids);
-      query.setInput(queryInput);
-      client.query(query, messageCallback);
-      Thread.sleep(3000);
+    private static void doQuery(String country, ImportIO client, MessageCallback messageCallback,
+                                Map<String, Object> queryInput, List<UUID> connectorGuids, String urlTemplate,
+                                String createdFrom, String createdTo) throws IOException, InterruptedException {
+        for (int pageNumber = 1; pageNumber < 101 ; pageNumber++) {
+            String queryUrl = String.format(urlTemplate, pageNumber, country, createdFrom, createdTo);
+            System.out.println("Query using url: " + queryUrl);
+            queryInput.put("webpage/url", queryUrl);
+            Query query = new Query();
+            query.setConnectorGuids(connectorGuids);
+            query.setInput(queryInput);
+            client.query(query, messageCallback);
+            Thread.sleep(3000);
+        }
     }
-  }
 }
