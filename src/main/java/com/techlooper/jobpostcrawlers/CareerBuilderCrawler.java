@@ -19,7 +19,7 @@ import java.util.concurrent.CountDownLatch;
 /**
  * Created by chris on 1/23/15.
  */
-public class JobStreetCrawler {
+public class CareerBuilderCrawler {
 
     public void crawl(final int pageNumber) throws IOException, InterruptedException {
         /**
@@ -54,7 +54,7 @@ public class JobStreetCrawler {
                     ObjectMapper mapper = new ObjectMapper();
 
                     try {
-                        BufferedWriter writer = Files.newBufferedWriter(Paths.get(String.format("jobStreet.page%s.json", pageNumber)),
+                        BufferedWriter writer = Files.newBufferedWriter(Paths.get(String.format("careerbuilder.page%s.json", pageNumber)),
                                 StandardCharsets.UTF_8, StandardOpenOption.CREATE);
                         mapper.writeValue(writer, results);
                         writer.close();
@@ -73,13 +73,13 @@ public class JobStreetCrawler {
         };
 
         // Generate the connector GUID we are going to query
-        List<UUID> connectorGuids = Arrays.asList(UUID.fromString(PropertyManager.properties.getProperty("import.io.jobs.connector.jobstreet")));
+        List<UUID> connectorGuids = Arrays.asList(UUID.fromString(PropertyManager.properties.getProperty("import.io.jobs.connector.careerbuilder")));
         UUID userId = UUID.fromString(PropertyManager.properties.getProperty("import.io.jobs.userId.chris"));
         ImportIO client = new ImportIO(userId, PropertyManager.properties.getProperty("import.io.jobs.apiKey.chris"));
         client.connect();
 
 
-        final String urlTemplate = PropertyManager.properties.getProperty("jobstreet.queryTemplate");
+        final String urlTemplate = PropertyManager.properties.getProperty("careerbuilder.queryTemplate");
         // Generate a map of inputs we wish to send
         final String queryUrl = String.format(urlTemplate, pageNumber);
         System.out.println("Query using url: " + queryUrl);
