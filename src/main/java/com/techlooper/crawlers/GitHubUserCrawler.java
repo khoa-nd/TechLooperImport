@@ -179,6 +179,7 @@ public class GitHubUserCrawler {
         }
       }
     }
+    executor.shutdown();
   }
 
   private static String count(String country, String createdFrom, String createdTo) throws IOException, InterruptedException {
