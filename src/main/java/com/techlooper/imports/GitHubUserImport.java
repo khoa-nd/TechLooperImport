@@ -24,7 +24,7 @@ public class GitHubUserImport {
 
     LOGGER.info("Configuration info: \n  - InputDirectory: {}\n  - AddUserApi: {}", inputDirectory, addUserApi);
 
-    Files.walk(Paths.get(inputDirectory), FileVisitOption.FOLLOW_LINKS).forEach(filePath -> {
+    Files.walk(Paths.get(inputDirectory), FileVisitOption.FOLLOW_LINKS).parallel().forEach(filePath -> {
       if (Files.isRegularFile(filePath) && filePath.toString().endsWith(".json")) {
         LOGGER.debug("Reading file {}", filePath);
         try {
