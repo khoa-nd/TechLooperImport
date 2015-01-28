@@ -6,13 +6,13 @@ import org.junit.Test;
 /**
  * Created by chris on 1/23/15.
  */
-public class CareerBuilderCrawlerTest {
+public class CareerLinkCrawlerTest {
 
     @Test
     @Ignore("No Need to test for now")
     public void testCrawl() throws Exception {
-        CareerBuilderCrawler crawler = new CareerBuilderCrawler();
-        for(int counter = 1; counter < 53; counter++) {
+        CareerLinkCrawler crawler = new CareerLinkCrawler();
+        for(int counter = 88; counter < 89; counter++) {
             crawler.crawl(counter);
         }
     }
