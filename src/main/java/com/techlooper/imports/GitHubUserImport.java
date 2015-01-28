@@ -7,9 +7,9 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.List;
 
 /**
  * Created by phuonghqh on 1/27/15.
@@ -24,7 +24,7 @@ public class GitHubUserImport {
 
     LOGGER.info("Configuration info: \n  - InputDirectory: {}\n  - AddUserApi: {}", inputDirectory, addUserApi);
 
-    Files.walk(Paths.get(inputDirectory)).parallel().forEach(filePath -> {
+    Files.walk(Paths.get("/Users/phuonghqh/Documents/working/sample/"), FileVisitOption.FOLLOW_LINKS).forEach(filePath -> {
       if (Files.isRegularFile(filePath) && filePath.toString().endsWith(".json")) {
         LOGGER.debug("Reading file {}", filePath);
         try {
@@ -39,7 +39,8 @@ public class GitHubUserImport {
           LOGGER.debug("Posting json: {} to Url: {}", json, addUserApi);
 
           int code = Utils.postJsonString(addUserApi, json);
-          if (code >= 200) {
+          if (code == 204) {
+            Files.move(filePath, Paths.get(filePath.toString() + ".ok"));
             LOGGER.debug("Successful import json: {} to Url: {}", json, addUserApi);
           }
           else {
@@ -51,5 +52,6 @@ public class GitHubUserImport {
         }
       }
     });
+
   }
 }
