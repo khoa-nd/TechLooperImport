@@ -1,5 +1,5 @@
 # TechLooperImport
-This is the project to import users into our database from various sources such as VietnamWorks or GitHub.
+This is the project to import users into our database from various sources such as VietnamWorks or GitHub. This repo also includes the source code for job source crawling.
 
 <img src="https://dl.dropboxusercontent.com/u/3061417/techlooper/TechLooperLogo.png" align="center" ></img>
 
