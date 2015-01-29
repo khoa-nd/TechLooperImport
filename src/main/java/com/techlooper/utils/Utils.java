@@ -13,6 +13,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 /**
  * Created by phuonghqh on 1/27/15.
@@ -22,7 +23,7 @@ public class Utils {
   public static int postJsonString(String url, String jsonString) throws IOException {
     HttpClient httpClient = HttpClients.createDefault();
     HttpPost post = new HttpPost(url);
-    post.setEntity(new StringEntity(jsonString, ContentType.create("application/json", "UTF-8")));
+    post.setEntity(new StringEntity(jsonString, ContentType.create("application/json", StandardCharsets.UTF_8)));
     HttpResponse response = httpClient.execute(post);
     return response.getStatusLine().getStatusCode();
   }
