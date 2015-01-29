@@ -29,7 +29,7 @@ public class GitHubUserImport {
         LOGGER.debug("Reading file {}", filePath);
         try {
           StringBuilder builder = new StringBuilder();
-          Files.readAllLines(filePath, StandardCharsets.UTF_8).forEach(line -> builder.append(line));
+          Files.readAllLines(filePath, StandardCharsets.UTF_8).forEach(builder::append);
           String json = builder.toString();
           json = json.replaceAll("image_url/_alt", "fullName")
             .replaceAll("image_url", "imageUrl")
