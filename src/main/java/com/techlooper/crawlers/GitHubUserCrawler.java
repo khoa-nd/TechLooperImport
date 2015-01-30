@@ -39,12 +39,15 @@ public class GitHubUserCrawler {
   private static enum DIVISION {NOT, BINARY}
 
   public static void main(String[] args) throws IOException, InterruptedException, ParseException {
-//    final String[] countries = {"vietnam"x, "japan"x, "thailand"x, "singapore"x, "malaysia"x, "indonasia"x, "australia"x, "china"x, "india", "korea", "taiwan",
+//    final String[] countries = {"vietnam"x, "japan"x, "thailand"x, "singapore"x, "malaysia"x, "indonasia"x, "australia"x, "china"x, "india"x, "korea", "taiwan",
 //      "spain", "ukraine", "poland", "russia", "bulgaria", "turkey", "greece", "serbia", "romania", "belarus", "lithuania", "estonia",
 //      "italy", "portugal", "colombia", "brazil", "chile", "argentina", "venezuela", "bolivia", "mexico"};
+    final String[] countries = {"vietnam", "japan", "thailand", "singapore", "malaysia", "indonesia", "australia", "china", "india", "korea", "taiwan",
+      "spain", "ukraine", "poland", "russia", "bulgaria", "turkey", "greece", "serbia", "romania", "belarus", "lithuania", "estonia",
+      "italy", "portugal", "colombia", "brazil", "chile", "argentina", "venezuela", "bolivia", "mexico"};
 
 
-    final String[] countries = {"china"};
+//    final String[] countries = {"india"};
 
     ExecutorService executor = Executors.newFixedThreadPool(20);
 
@@ -81,7 +84,6 @@ public class GitHubUserCrawler {
 
   private static void doCountry(String country, ExecutorService executor) throws IOException, InterruptedException, ParseException {
     int currentYear = Calendar.getInstance(Locale.US).get(Calendar.YEAR);
-    currentYear = 2011;
     boolean stop = false;
     String fromTo = String.format("2007-01-01..%d-12-31", currentYear);
     DIVISION div = DIVISION.NOT;
