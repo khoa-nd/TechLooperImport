@@ -31,9 +31,9 @@ public class GitHubUserImport {
           StringBuilder builder = new StringBuilder();
           Files.readAllLines(filePath, StandardCharsets.UTF_8).forEach(builder::append);
           String json = builder.toString();
-          json = json.replaceAll("image_url/_alt", "fullName")
-            .replaceAll("image_url", "imageUrl")
-            .replaceAll("datejoin", "dateJoin")
+          json = json.replaceAll("image_url/_alt", "fullname")
+            /*.replaceAll("image_url", "imageUrl")
+            .replaceAll("datejoin", "dateJoin")*/
             .replaceAll("\"},", ",\"crawlerSource\": \"GITHUB\"},")
             .replaceAll("\"}]", ",\"crawlerSource\": \"GITHUB\"}]");
           LOGGER.debug("Posting json: {} to Url: {}", json, addUserApi);
