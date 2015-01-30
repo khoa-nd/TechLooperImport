@@ -34,8 +34,8 @@ public class GitHubUserImport {
           json = json.replaceAll("image_url/_alt", "fullName")
             .replaceAll("image_url", "imageUrl")
             .replaceAll("datejoin", "dateJoin")
-            .replaceAll("},", ",\"crawlerSource\": \"GITHUB\"},")
-            .replaceAll("}]", ",\"crawlerSource\": \"GITHUB\"}]");
+            .replaceAll("\"},", ",\"crawlerSource\": \"GITHUB\"},")
+            .replaceAll("\"}]", ",\"crawlerSource\": \"GITHUB\"}]");
           LOGGER.debug("Posting json: {} to Url: {}", json, addUserApi);
 
           int code = Utils.postJsonString(addUserApi, json);

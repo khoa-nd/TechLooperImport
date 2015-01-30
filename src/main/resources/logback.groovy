@@ -19,10 +19,10 @@ appender("FILE", RollingFileAppender) {
   rollingPolicy(FixedWindowRollingPolicy) {
     fileNamePattern = "techlooper-imports_%i.log"
     minIndex = 1
-    maxIndex = 12
+    maxIndex = 24
   }
   triggeringPolicy(SizeBasedTriggeringPolicy) {
-    maxFileSize = "10MB"
+    maxFileSize = "12MB"
   }
   encoder(PatternLayoutEncoder) {
     pattern = "%d{dd-MM-yyyy HH:mm:ss.SSS} %p [%t] %c{1}: %m%n"
