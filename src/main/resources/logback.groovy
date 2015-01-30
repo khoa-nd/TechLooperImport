@@ -29,6 +29,6 @@ appender("FILE", RollingFileAppender) {
   }
 }
 
-logger("com.techlooper", ALL, ["CONSOLE", "FILE"])
+logger("com.techlooper", ALL, ["CONSOLE", "FILE"], Boolean.FALSE)
 
 root(ERROR, ["CONSOLE", "FILE"])
