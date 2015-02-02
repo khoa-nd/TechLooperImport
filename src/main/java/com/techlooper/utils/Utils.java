@@ -20,6 +20,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.util.List;
 
 /**
  * Created by phuonghqh on 1/27/15.
@@ -27,6 +28,15 @@ import java.nio.file.StandardOpenOption;
 public class Utils {
 
   private static Logger LOGGER = LoggerFactory.getLogger(Utils.class);
+
+  public static void writeToFile(List<?> list, String filenameTemplate, Object... params) throws IOException {
+    if (list.size() > 0) {
+      final StringBuilder builder = new StringBuilder();
+      list.forEach(usn -> builder.append(",").append("\"").append(usn).append("\""));
+      writeToFile(builder.deleteCharAt(0).insert(0, "[").append("]").toString(),
+        String.format(filenameTemplate, params));
+    }
+  }
 
   public static Client esClient() {
     Settings settings = ImmutableSettings.settingsBuilder()
