@@ -64,6 +64,7 @@ public class GitHubUserProfileEnricher {
         .setSearchType(SearchType.DFS_QUERY_THEN_FETCH)
         .setFrom(pageNumber * 100).setSize(100).execute().actionGet();
       List<String> failedUsernames = new ArrayList<>();
+      List<String> successUsernames = new ArrayList<>();
 
       List<String> usernames = new ArrayList<>();
       response.getHits().forEach(hit -> usernames.add(hit.field("profiles.GITHUB.username").getValue()));
@@ -73,18 +74,16 @@ public class GitHubUserProfileEnricher {
           if (failedUsername != null) {
             failedUsernames.add(failedUsername);
           }
+          else {
+            successUsernames.add(username);
+          }
         }
         catch (IOException e) {
           LOGGER.error("ERROR", e);
         }
       });
-
-      if (failedUsernames.size() > 0) {
-        final StringBuilder usnBuilder = new StringBuilder();
-        failedUsernames.forEach(usn -> usnBuilder.append(",").append("\"").append(usn).append("\""));
-        Utils.writeToFile(usnBuilder.deleteCharAt(0).insert(0, "[").append("]").toString(),
-          String.format("%sgithubUserProfileEnricher.%d.json", outputDirectory, pageNumber));
-      }
+      Utils.writeToFile(successUsernames, "%sgithub.success.p.%d.json", outputDirectory, pageNumber);
+      Utils.writeToFile(failedUsernames, "%sgithub.failed.p.%d.json", outputDirectory, pageNumber);
     }
     client.close();
   }
@@ -95,6 +94,7 @@ public class GitHubUserProfileEnricher {
     String apiKey = PropertyManager.properties.getProperty("githubUserProfileEnricher.apiKey");
     String connectorId = PropertyManager.properties.getProperty("githubUserProfileEnricher.githubProfile");
     String queryUrlTemplate = PropertyManager.properties.getProperty("githubUserProfileEnricher.queryUrlTemplate");
+    String outputDirectory = PropertyManager.properties.getProperty("githubUserProfileEnricher.outputDirectory");
 
     boolean tryAgain = true;
 
@@ -129,8 +129,8 @@ public class GitHubUserProfileEnricher {
         if (indexOfField == -1) {
           continue;
         }
-        String endFieldPattern = "\",\"";
 
+        String endFieldPattern = "\",\"";
         String extractJson = json.substring(indexOfField, json.indexOf(endFieldPattern, indexOfField) + endFieldPattern.length());
         if (extractJson != null && !extractJson.contains("[")) {
           LOGGER.debug("Extract json: {} => Refine data", extractJson);
@@ -138,6 +138,7 @@ public class GitHubUserProfileEnricher {
         }
       }
 
+      Utils.writeToFile(json, String.format("%sgithub.%s.post.json", outputDirectory, username));
       LOGGER.debug("OK => Post to api {} ", enrichUserApi);
       if (Utils.postJsonString(enrichUserApi, json) != 204) {
         LOGGER.error("Error when posting json {} to api {}", json, enrichUserApi);
