@@ -164,6 +164,7 @@ public class GitHubUserProfileEnricher {
         }
         catch (IOException e) {
           LOGGER.error("ERROR", e);
+          failedUsernames.add(username);
         }
       });
       try {
