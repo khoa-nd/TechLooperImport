@@ -16,6 +16,7 @@ import org.elasticsearch.client.Client;
 import org.elasticsearch.search.SearchHits;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import sun.jvm.hotspot.types.basic.BasicType;
 
 import java.io.IOException;
 import java.net.URLEncoder;
@@ -27,6 +28,8 @@ import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * Created by phuonghqh on 1/30/15.
@@ -51,7 +54,6 @@ public class GitHubUserProfileEnricher {
 
   private static void queryES() throws IOException {
     Client client = Utils.esClient();
-    String outputDirectory = PropertyManager.properties.getProperty("githubUserProfileEnricher.outputDirectory");
 
     SearchRequestBuilder searchRequestBuilder = client.prepareSearch(PropertyManager.properties.getProperty("githubUserProfileEnricher.es.index"));
     SearchResponse response = searchRequestBuilder.setSearchType(SearchType.COUNT).execute().actionGet();
@@ -59,32 +61,12 @@ public class GitHubUserProfileEnricher {
     long totalUsers = response.getHits().getTotalHits();
     long maxPageNumber = (totalUsers % 100 == 0) ? totalUsers / 100 : totalUsers / 100 + 1;
 
+    ExecutorService executor = Executors.newFixedThreadPool(20);
     for (int pageNumber = 0; pageNumber < maxPageNumber; pageNumber++) {
-      response = searchRequestBuilder.addField("profiles.GITHUB.username")
-        .setSearchType(SearchType.DFS_QUERY_THEN_FETCH)
-        .setFrom(pageNumber * 100).setSize(100).execute().actionGet();
-      List<String> failedUsernames = new ArrayList<>();
-      List<String> successUsernames = new ArrayList<>();
-
-      List<String> usernames = new ArrayList<>();
-      response.getHits().forEach(hit -> usernames.add(hit.field("profiles.GITHUB.username").getValue()));
-      usernames.parallelStream().forEach(username -> {
-        try {
-          String failedUsername = enrichUserProfile(username);
-          if (failedUsername != null) {
-            failedUsernames.add(failedUsername);
-          }
-          else {
-            successUsernames.add(username);
-          }
-        }
-        catch (IOException e) {
-          LOGGER.error("ERROR", e);
-        }
-      });
-      Utils.writeToFile(successUsernames, "%sgithub.success.p.%d.json", outputDirectory, pageNumber);
-      Utils.writeToFile(failedUsernames, "%sgithub.failed.p.%d.json", outputDirectory, pageNumber);
+      executor.execute(new EnrichJob(pageNumber, searchRequestBuilder));
     }
+    executor.shutdown();
+
     client.close();
   }
 
@@ -147,5 +129,49 @@ public class GitHubUserProfileEnricher {
       tryAgain = false;
     }
     return null;
+  }
+
+  private static class EnrichJob implements Runnable {
+
+    private int pageNumber;
+    SearchRequestBuilder searchRequestBuilder;
+
+    public EnrichJob(int pageNumber, SearchRequestBuilder searchRequestBuilder) {
+      this.pageNumber = pageNumber;
+      this.searchRequestBuilder = searchRequestBuilder;
+    }
+
+    public void run() {
+      String outputDirectory = PropertyManager.properties.getProperty("githubUserProfileEnricher.outputDirectory");
+      SearchResponse response = searchRequestBuilder.addField("profiles.GITHUB.username")
+        .setSearchType(SearchType.DFS_QUERY_THEN_FETCH)
+        .setFrom(pageNumber * 100).setSize(100).execute().actionGet();
+      List<String> failedUsernames = new ArrayList<>();
+      List<String> successUsernames = new ArrayList<>();
+
+      List<String> usernames = new ArrayList<>();
+      response.getHits().forEach(hit -> usernames.add(hit.field("profiles.GITHUB.username").getValue()));
+      usernames.parallelStream().forEach(username -> {
+        try {
+          String failedUsername = enrichUserProfile(username);
+          if (failedUsername != null) {
+            failedUsernames.add(failedUsername);
+          }
+          else {
+            successUsernames.add(username);
+          }
+        }
+        catch (IOException e) {
+          LOGGER.error("ERROR", e);
+        }
+      });
+      try {
+        Utils.writeToFile(successUsernames, "%sgithub.success.p.%d.json", outputDirectory, pageNumber);
+        Utils.writeToFile(failedUsernames, "%sgithub.failed.p.%d.json", outputDirectory, pageNumber);
+      }
+      catch (Exception e) {
+        LOGGER.error("Error write to files", e);
+      }
+    }
   }
 }
