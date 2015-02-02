@@ -114,8 +114,13 @@ public class GitHubUserProfileEnricher {
         }
       }
 
+      if (!json.contains("\"username\"")) {
+        json = new StringBuilder(json).insert(2, "\"username\":\"" + username + "\"").toString();
+        LOGGER.debug("Not detected username from import.io => Refine it to {}", json);
+      }
+
       Utils.writeToFile(json, String.format("%sgithub.%s.post.json", outputDirectory, username));
-      LOGGER.debug("OK => Post to user {} to api ", username);
+      LOGGER.debug("OK => Post user \"{}\" to api ", username);
       if (Utils.postJsonString(enrichUserApi, json) != 204) {
         LOGGER.error("Error when posting json {} to api {}", json, enrichUserApi);
         return username;
@@ -134,6 +139,7 @@ public class GitHubUserProfileEnricher {
     }
 
     public void run() {
+      LOGGER.debug("New thread query ES page {}", pageNumber);
       Client client = Utils.esClient();
       String outputDirectory = PropertyManager.properties.getProperty("githubUserProfileEnricher.outputDirectory");
       SearchRequestBuilder searchRequestBuilder = client.prepareSearch(PropertyManager.properties.getProperty("githubUserProfileEnricher.es.index"));
