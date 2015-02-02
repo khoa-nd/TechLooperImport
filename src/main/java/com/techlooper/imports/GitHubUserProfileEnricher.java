@@ -115,7 +115,7 @@ public class GitHubUserProfileEnricher {
       }
 
       if (!json.contains("\"username\"")) {
-        json = new StringBuilder(json).insert(2, "\"username\":\"" + username + "\"").toString();
+        json = new StringBuilder(json).insert(2, "\"username\":\"" + username + "\",").toString();
         LOGGER.debug("Not detected username from import.io => Refine it to {}", json);
       }
 
