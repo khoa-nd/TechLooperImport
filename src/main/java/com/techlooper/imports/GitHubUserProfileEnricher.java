@@ -139,7 +139,7 @@ public class GitHubUserProfileEnricher {
       }
 
       Utils.writeToFile(json, String.format("%sgithub.%s.post.json", outputDirectory, username));
-      LOGGER.debug("OK => Post to api {} ", enrichUserApi);
+      LOGGER.debug("OK => Post to user {} to api ", username);
       if (Utils.postJsonString(enrichUserApi, json) != 204) {
         LOGGER.error("Error when posting json {} to api {}", json, enrichUserApi);
         return username;
