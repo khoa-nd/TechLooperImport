@@ -57,7 +57,7 @@ public class GitHubUserProfileEnricher {
 
     ExecutorService executor = Executors.newFixedThreadPool(20);
     for (int pageNumber = 0; pageNumber < maxPageNumber; pageNumber++) {
-      executor.execute(new EnrichJob(pageNumber, searchRequestBuilder));
+      executor.execute(new EnrichJob(pageNumber));
     }
     executor.shutdown();
 
@@ -128,15 +128,16 @@ public class GitHubUserProfileEnricher {
   private static class EnrichJob implements Runnable {
 
     private int pageNumber;
-    SearchRequestBuilder searchRequestBuilder;
 
-    public EnrichJob(int pageNumber, SearchRequestBuilder searchRequestBuilder) {
+    public EnrichJob(int pageNumber) {
       this.pageNumber = pageNumber;
-      this.searchRequestBuilder = searchRequestBuilder;
     }
 
     public void run() {
+      Client client = Utils.esClient();
       String outputDirectory = PropertyManager.properties.getProperty("githubUserProfileEnricher.outputDirectory");
+      SearchRequestBuilder searchRequestBuilder = client.prepareSearch(PropertyManager.properties.getProperty("githubUserProfileEnricher.es.index"));
+
       SearchResponse response = searchRequestBuilder.addField("profiles.GITHUB.username")
         .setSearchType(SearchType.DFS_QUERY_THEN_FETCH)
         .setFrom(pageNumber * 100).setSize(100).execute().actionGet();
@@ -166,6 +167,7 @@ public class GitHubUserProfileEnricher {
       catch (Exception e) {
         LOGGER.error("Error write to files", e);
       }
+      client.close();
     }
   }
 }
