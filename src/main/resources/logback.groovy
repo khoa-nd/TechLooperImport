@@ -79,4 +79,4 @@ logger("com.techlooper.crawlers.GitHubUserCrawler", ALL, ["CONSOLE", "CRAWLERS"]
 logger("com.techlooper.imports.GitHubUserProfileEnricher", ALL, ["CONSOLE","ENRICHER"], Boolean.FALSE)
 logger("com.techlooper.imports.GitHubUserImport", ALL, ["CONSOLE", "IMPORT"], Boolean.FALSE)
 
-root(ERROR, ["CONSOLE", "ROOT"])
+root(ALL, ["CONSOLE", "ROOT"])

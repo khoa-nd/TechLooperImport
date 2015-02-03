@@ -2,7 +2,6 @@ package com.techlooper.utils;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -29,6 +28,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.List;
+import java.util.function.Consumer;
 
 /**
  * Created by phuonghqh on 1/27/15.
@@ -37,12 +37,38 @@ public class Utils {
 
   private static Logger LOGGER = LoggerFactory.getLogger(Utils.class);
 
-  public static JsonNode onlyOneNode(JsonNode root) {
-    ArrayNode arrayNode = (ArrayNode) root;
-    if (arrayNode.size() == 1) {
-      return arrayNode.get(0);
+  public static void doIIOQuery(String connectorId, String userId, String apiKey, String queryUrl,
+                                Consumer<JsonNode> consumer) {
+    try {
+      boolean tryAgain = true;
+      while (tryAgain) {
+        LOGGER.debug("Query using url: " + queryUrl);
+        String content = Utils.postIIOAndReadContent(connectorId, userId, apiKey, queryUrl);
+        JsonNode root = Utils.readIIOResult(content);
+        if (!root.isArray()) {
+          LOGGER.debug("Error result => query: {}", queryUrl);
+          if ("I/O Error getting page.".equals(Utils.readJson(content).at("/error").asText())) {
+            LOGGER.error("I/O Error getting page. => Try again query {}", queryUrl);
+          }
+          else {
+            LOGGER.error("Not I/O Error getting page. => Break loop query {}", queryUrl);
+            break;
+          }
+          continue;
+        }
+        tryAgain = false;
+
+        if (root.size() == 0) {
+          LOGGER.debug("Empty result, query {}", queryUrl);
+        }
+
+        LOGGER.debug("OK => Consuming {}", root);
+        consumer.accept(root);
+      }
     }
-    return null;
+    catch (Exception e) {
+      LOGGER.error("Can not do crawler", e);
+    }
   }
 
   public static String postIIOAndReadContent(String connectorId, String userId, String apiKey, String queryUrl) throws UnsupportedEncodingException {
@@ -89,12 +115,11 @@ public class Utils {
     return new ObjectMapper().readTree(json);
   }
 
-  public static void writeToFile(List<?> list, String filenameTemplate, Object... params) throws IOException {
+  public static void writeToFile(List<?> list, String filepath) throws IOException {
     if (list.size() > 0) {
       final StringBuilder builder = new StringBuilder();
       list.forEach(usn -> builder.append(",").append("\"").append(usn).append("\""));
-      writeToFile(builder.deleteCharAt(0).insert(0, "[").append("]").toString(),
-        String.format(filenameTemplate, params));
+      writeToFile(builder.deleteCharAt(0).insert(0, "[").append("]").toString(), filepath);
     }
   }
 
@@ -114,23 +139,6 @@ public class Utils {
     post.setEntity(new StringEntity(jsonString, ContentType.create("application/json", StandardCharsets.UTF_8)));
     HttpResponse response = httpClient.execute(post);
     return response.getStatusLine().getStatusCode();
-  }
-
-  public static String getImportIOResult(String content) {
-    int resultIndex = content.indexOf("\"results\":[");
-    if (resultIndex < 0) {
-      LOGGER.debug("No result");
-      return null;
-    }
-    LOGGER.debug("Extracting result from {}", content);
-
-    int endResultIndex = content.indexOf("],\"cookies\"", resultIndex);
-    String json = content.substring(resultIndex + "\"results\":[".length() - 1, endResultIndex + 1);
-    if ("[]".equals(json)) {
-      LOGGER.debug("Result is empty from {}", content);
-      return null;
-    }
-    return json;
   }
 
   public static void writeToFile(String content, String filepath) throws IOException {

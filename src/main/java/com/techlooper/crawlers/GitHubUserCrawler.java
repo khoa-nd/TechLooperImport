@@ -1,17 +1,8 @@
 package com.techlooper.crawlers;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.techlooper.utils.PropertyManager;
 import com.techlooper.utils.Utils;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.ContentType;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
-import org.apache.http.util.EntityUtils;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
@@ -20,7 +11,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URLEncoder;
 import java.text.ParseException;
 import java.util.Calendar;
 import java.util.Locale;
@@ -145,41 +135,20 @@ public class GitHubUserCrawler {
     String urlTemplate = PropertyManager.properties.getProperty("githubUserCrawler.user.searchTemplate");
     String connectorId = PropertyManager.properties.getProperty("githubUserCrawler.import.io.connector.github.totalUsers");
 
-    boolean tryAgain = true;
-    Integer count = 0;
-    Integer maxPageNumber = 1;
+    final Integer[] count = {0};
+    final Integer[] maxPageNumber = {1};
 
-    while (tryAgain) {
-      String queryUrl = String.format(urlTemplate, 1, country, createdFrom, createdTo);
-      LOGGER.debug("Catch total using url: " + queryUrl);
-      String content = Utils.postIIOAndReadContent(connectorId, userId, apiKey, queryUrl);
-      if (content == null) {
-        continue;
-      }
+    String queryUrl = String.format(urlTemplate, 1, country, createdFrom, createdTo);
+    LOGGER.debug("Do import.io query {}", queryUrl);
+    Utils.doIIOQuery(connectorId, userId, apiKey, queryUrl, countInfo -> {
+      LOGGER.debug("Result from query {} is {}", queryUrl, countInfo);
+      countInfo = countInfo.get(0);
+      count[0] = countInfo.get("total_users").asInt();
+      maxPageNumber[0] = count[0] / 10 + (count[0] % 10 > 0 ? 1 : 0);
+    });
 
-      JsonNode root = Utils.readIIOResult(content);
-      if (!root.isArray()) {
-        LOGGER.debug("Error result => query: {}", queryUrl);
-        continue;
-      }
-      tryAgain = false;
-
-      if (root.size() == 0) {
-        LOGGER.debug("Empty result => query: {}", queryUrl);
-        continue;
-      }
-      root = root.get(0);
-
-      count = root.get("total_users").asInt();
-      if (count <= 0) {
-        LOGGER.debug("No total => query: " + queryUrl);
-        continue;
-      }
-      maxPageNumber = count / 10 + (count % 10 > 0 ? 1 : 0);
-    }
-
-    LOGGER.debug("Total user for the period of {}..{}: {} , max-page: ", createdFrom, createdTo, count, maxPageNumber);
-    return count + "," + maxPageNumber;
+    LOGGER.debug("Total user for the period of {}..{}: {} , max-page: ", createdFrom, createdTo, count[0], maxPageNumber[0]);
+    return count[0] + "," + maxPageNumber[0];
   }
 
   private static class JobQuery implements Runnable {
@@ -206,37 +175,24 @@ public class GitHubUserCrawler {
       String outputDirectory = PropertyManager.properties.getProperty("githubUserCrawler.outputDirectory");
 
       String period = String.format("%s..%s", createdFrom, createdTo);
-      boolean tryAgain = true;
       String filename = String.format("%s%s.%s.%d.json", outputDirectory, country, period, pageNumber);
       File f = new File(filename);
       if (f.exists() && !f.isDirectory()) {
         return;
       }
 
-      try {
-        while (tryAgain) {
-          String queryUrl = String.format(urlTemplate, pageNumber, country, createdFrom, createdTo);
-          LOGGER.debug("Query users using url: " + queryUrl);
-          String content = Utils.postIIOAndReadContent(connectorId, userId, apiKey, queryUrl);
-          JsonNode root = Utils.readIIOResult(content);
-          if (!root.isArray()) {
-            LOGGER.debug("Error result => query: {}", queryUrl);
-            continue;
-          }
-          tryAgain = false;
-
-          if (root.size() == 0) {
-            LOGGER.debug("Empty result => Not write to file {}", filename);
-            continue;
-          }
-
-          Utils.writeToFile(root, filename);
-          LOGGER.debug("OK => wrote to file: " + filename);
+      String queryUrl = String.format(urlTemplate, pageNumber, country, createdFrom, createdTo);
+      LOGGER.debug("Do import.io query {}", queryUrl);
+      Utils.doIIOQuery(connectorId, userId, apiKey, queryUrl, users -> {
+        LOGGER.debug("Result from query {} is {}", queryUrl, users);
+        try {
+          LOGGER.debug("OK => Write to file: " + filename);
+          Utils.writeToFile(users, filename);
         }
-      }
-      catch (Exception e) {
-        LOGGER.error("Can not do crawler", e);
-      }
+        catch (IOException e) {
+          LOGGER.error("ERROR", e);
+        }
+      });
     }
   }
 }
