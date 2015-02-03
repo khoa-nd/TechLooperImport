@@ -1,5 +1,12 @@
 package com.techlooper.utils;
 
+import com.fasterxml.jackson.core.JsonGenerationException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.MissingNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
@@ -15,6 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -28,6 +36,30 @@ import java.util.List;
 public class Utils {
 
   private static Logger LOGGER = LoggerFactory.getLogger(Utils.class);
+
+  public static void sureDirectory(String dirPath) {
+    File dir = new File(dirPath);
+    if (!dir.exists()) {
+      dir.mkdirs();
+    }
+  }
+
+  public static void writeToFile(JsonNode root, String filePath) throws IOException {
+    new ObjectMapper().writeValue(new java.io.File(filePath), root);
+  }
+
+  public static JsonNode readIIOResult(String iioContent) throws IOException {
+    return readJson(iioContent).at("/results");
+  }
+
+  public static String toIOQueryUrl(String queryUrl) {
+    return JsonNodeFactory.instance.objectNode().set("input",
+      JsonNodeFactory.instance.objectNode().put("webpage/url", queryUrl)).toString();
+  }
+
+  public static JsonNode readJson(String json) throws IOException {
+    return new ObjectMapper().readTree(json);
+  }
 
   public static void writeToFile(List<?> list, String filenameTemplate, Object... params) throws IOException {
     if (list.size() > 0) {

@@ -1,6 +1,9 @@
 package com.techlooper.crawlers;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.techlooper.utils.PropertyManager;
+import com.techlooper.utils.Utils;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
@@ -39,15 +42,14 @@ public class GitHubUserCrawler {
   private static enum DIVISION {NOT, BINARY}
 
   public static void main(String[] args) throws IOException, InterruptedException, ParseException {
-//    final String[] countries = {"vietnam"x, "japan"x, "thailand"x, "singapore"x, "malaysia"x, "indonasia"x, "australia"x, "china"x, "india"x, "korea", "taiwan",
+    String outputDirectory = PropertyManager.properties.getProperty("githubUserCrawler.outputDirectory");
+    Utils.sureDirectory(outputDirectory);
+//    final String[] countries = {"vietnam"x, "japan"x, "thailand"x, "singapore"x, "malaysia"x, "indonesia"x, "australia"x, "china"x, "india"x, "korea", "taiwan",
 //      "spain", "ukraine", "poland", "russia", "bulgaria", "turkey", "greece", "serbia", "romania", "belarus", "lithuania", "estonia",
 //      "italy", "portugal", "colombia", "brazil", "chile", "argentina", "venezuela", "bolivia", "mexico"};
-    final String[] countries = {"vietnam", "japan", "thailand", "singapore", "malaysia", "indonesia", "australia", "china", "india", "korea", "taiwan",
-      "spain", "ukraine", "poland", "russia", "bulgaria", "turkey", "greece", "serbia", "romania", "belarus", "lithuania", "estonia",
-      "italy", "portugal", "colombia", "brazil", "chile", "argentina", "venezuela", "bolivia", "mexico"};
 
 
-//    final String[] countries = {"india"};
+    final String[] countries = {"india"};
 
     ExecutorService executor = Executors.newFixedThreadPool(20);
 
@@ -229,11 +231,6 @@ public class GitHubUserCrawler {
 
       String period = String.format("%s..%s", createdFrom, createdTo);
       boolean tryAgain = true;
-      File dir = new File(outputDirectory);
-      if (!dir.exists()) {
-        dir.mkdirs();
-      }
-
       String filename = String.format("%s%s.%s.%d.json", outputDirectory, country, period, pageNumber);
       File f = new File(filename);
       if (f.exists() && !f.isDirectory()) {
@@ -253,8 +250,7 @@ public class GitHubUserCrawler {
           HttpPost p = new HttpPost(String.format("https://api.import.io/store/data/%s/_query?_user=%s&_apikey=%s",
             connectorId, userId, URLEncoder.encode(apiKey, "UTF-8")));
 
-          String json = String.format("{ \"input\": {\"webpage/url\": \"%s\"} }", queryUrl);
-          p.setEntity(new StringEntity(json, ContentType.create("application/json")));
+          p.setEntity(new StringEntity(Utils.toIOQueryUrl(queryUrl), ContentType.create("application/json")));
 
           HttpResponse r = null;
 
@@ -272,30 +268,14 @@ public class GitHubUserCrawler {
             continue;
           }
 
-          int resultIndex = content.indexOf("\"results\":[");
-          if (resultIndex < 0) {
-            LOGGER.debug("No Result => query: " + queryUrl);
+          ArrayNode root = (ArrayNode)Utils.readIIOResult(content);
+          if (!root.hasNonNull(0)) {
+            LOGGER.debug("Empty result => query: {}", queryUrl);
             continue;
           }
-          LOGGER.debug("Success => query: " + queryUrl);
-
-          int endResultIndex = content.indexOf("],\"cookies\"", resultIndex);
-          json = content.substring(resultIndex + "\"results\":[".length() - 1, endResultIndex + 1);
-          if ("[]".equals(json)) {
-            LOGGER.debug("Result is empty => not write to file: " + filename);
-            continue;
-          }
-
+          Utils.writeToFile(root, filename);
           LOGGER.debug("OK => wrote to file: " + filename);
-          try {
-            BufferedWriter writer = Files.newBufferedWriter(Paths.get(filename), StandardCharsets.UTF_8, StandardOpenOption.CREATE);
-            writer.write(json);
-            writer.close();
-            tryAgain = false;
-          }
-          catch (IOException e) {
-            LOGGER.error("Can not write file", e);
-          }
+          tryAgain = false;
         }
       }
       catch (Exception e) {

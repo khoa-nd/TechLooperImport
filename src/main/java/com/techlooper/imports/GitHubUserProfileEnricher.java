@@ -1,5 +1,9 @@
 package com.techlooper.imports;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.techlooper.utils.PropertyManager;
 import com.techlooper.utils.Utils;
 import org.apache.http.HttpResponse;
@@ -22,8 +26,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /**
  * Created by phuonghqh on 1/30/15.
@@ -43,6 +45,8 @@ public class GitHubUserProfileEnricher {
 //        LOGGER.error("ERROR:", e);
 //      }
 //    });
+    String outputDirectory = PropertyManager.properties.getProperty("githubUserProfileEnricher.outputDirectory");
+    Utils.sureDirectory(outputDirectory);
     queryES();
   }
 
@@ -55,12 +59,50 @@ public class GitHubUserProfileEnricher {
     long totalUsers = response.getHits().getTotalHits();
     long maxPageNumber = (totalUsers % 100 == 0) ? totalUsers / 100 : totalUsers / 100 + 1;
 
-    ExecutorService executor = Executors.newFixedThreadPool(20);
     for (int pageNumber = 0; pageNumber < maxPageNumber; pageNumber++) {
-      executor.execute(new EnrichJob(pageNumber));
+      doQuery(pageNumber);
     }
-    executor.shutdown();
 
+    client.close();
+  }
+
+  private static void doQuery(int pageNumber) {
+    LOGGER.debug("New query ES page created {}", pageNumber);
+    Client client = Utils.esClient();
+    String outputDirectory = PropertyManager.properties.getProperty("githubUserProfileEnricher.outputDirectory");
+    SearchRequestBuilder searchRequestBuilder = client.prepareSearch(PropertyManager.properties.getProperty("githubUserProfileEnricher.es.index"));
+
+    SearchResponse response = searchRequestBuilder.addField("profiles.GITHUB.username")
+      .setSearchType(SearchType.DFS_QUERY_THEN_FETCH)
+      .setFrom(pageNumber * 100).setSize(100).execute().actionGet();
+    List<String> failedUsernames = new ArrayList<>();
+    List<String> successUsernames = new ArrayList<>();
+
+    List<String> usernames = new ArrayList<>();
+    usernames.add("arevutsky");
+//    response.getHits().forEach(hit -> usernames.add(hit.field("profiles.GITHUB.username").getValue()));
+    usernames.parallelStream().forEach(username -> {
+      try {
+        String failedUsername = enrichUserProfile(username);
+        if (failedUsername != null) {
+          failedUsernames.add(failedUsername);
+        }
+        else {
+          successUsernames.add(username);
+        }
+      }
+      catch (IOException e) {
+        LOGGER.error("ERROR", e);
+        failedUsernames.add(username);
+      }
+    });
+    try {
+      Utils.writeToFile(successUsernames, "%sgithub.success.p.%d.json", outputDirectory, pageNumber);
+      Utils.writeToFile(failedUsernames, "%sgithub.failed.p.%d.json", outputDirectory, pageNumber);
+    }
+    catch (Exception e) {
+      LOGGER.error("Error write to files", e);
+    }
     client.close();
   }
 
@@ -73,15 +115,13 @@ public class GitHubUserProfileEnricher {
     String outputDirectory = PropertyManager.properties.getProperty("githubUserProfileEnricher.outputDirectory");
 
     boolean tryAgain = true;
-
     while (tryAgain) {
       HttpClient httpClient = HttpClients.createDefault();
       HttpPost post = new HttpPost(String.format("https://api.import.io/store/data/%s/_query?_user=%s&_apikey=%s",
         connectorId, userId, URLEncoder.encode(apiKey, "UTF-8")));
 
       String queryUrl = String.format(queryUrlTemplate, username);
-      String json = String.format("{ \"input\": {\"webpage/url\": \"%s\"} }", queryUrl);
-      post.setEntity(new StringEntity(json, ContentType.create("application/json", "UTF-8")));
+      post.setEntity(new StringEntity(Utils.toIOQueryUrl(queryUrl), ContentType.create("application/json", "UTF-8")));
 
       String content = null;
       try {
@@ -93,88 +133,42 @@ public class GitHubUserProfileEnricher {
         continue;
       }
 
-      json = Utils.getImportIOResult(content);
-      if (json == null) {
+      JsonNode root = Utils.readIIOResult(content);
+      if (!root.isArray()) {
         LOGGER.debug("Error result => query: {}", queryUrl);
         break;
       }
 
+      ArrayNode arrayNode = (ArrayNode) root;
+      if (!arrayNode.hasNonNull(0)) {
+        LOGGER.debug("Empty result => query: {}", queryUrl);
+        break;
+      }
+
+      root = arrayNode.get(0);
+      ObjectNode writableRoot = (ObjectNode) root;
       for (String field : refineImportIOFields) {
-        String fieldPattern = "\"" + field + "\":\"";
-        int indexOfField = json.indexOf(fieldPattern);
-        if (indexOfField == -1) {
-          continue;
-        }
-
-        String endFieldPattern = "\",\"";
-        String extractJson = json.substring(indexOfField, json.indexOf(endFieldPattern, indexOfField) + endFieldPattern.length());
-        if (extractJson != null && !extractJson.contains("[")) {
-          LOGGER.debug("Extract json: {} => Refine data", extractJson);
-          json = json.replaceAll(extractJson, extractJson.replaceAll(":\"", ":[\"").replaceAll("\",", "\"],"));
+        JsonNode node = root.at("/" + field);
+        if (!node.isArray()) {
+          LOGGER.debug("Refine json {} ...", root.toString());
+          String text = node.asText();
+          ArrayNode jsonNodes = writableRoot.putArray(field);
+          if (node.isTextual()) {
+            jsonNodes.add(text);
+          }
+          LOGGER.debug("...to {}", root.toString());
         }
       }
-
-      if (!json.contains("\"username\"")) {
-        json = new StringBuilder(json).insert(2, "\"username\":\"" + username + "\",").toString();
-        LOGGER.debug("Not detected username from import.io => Refine it to {}", json);
-      }
-
-      Utils.writeToFile(json, String.format("%sgithub.%s.post.json", outputDirectory, username));
+      writableRoot.put("username", username);
+      Utils.writeToFile(root.toString(), String.format("%sgithub.%s.post.json", outputDirectory, username));
       LOGGER.debug("OK => Post user \"{}\" to api ", username);
-      if (Utils.postJsonString(enrichUserApi, json) != 204) {
-        LOGGER.error("Error when posting json {} to api {}", json, enrichUserApi);
+      arrayNode = JsonNodeFactory.instance.arrayNode().add(root);
+      if (Utils.postJsonString(enrichUserApi, arrayNode.toString()) != 204) {
+        LOGGER.error("Error when posting json {} to api {}", arrayNode, enrichUserApi);
         return username;
       }
       tryAgain = false;
     }
     return null;
-  }
-
-  private static class EnrichJob implements Runnable {
-
-    private int pageNumber;
-
-    public EnrichJob(int pageNumber) {
-      this.pageNumber = pageNumber;
-    }
-
-    public void run() {
-      LOGGER.debug("New thread query ES page {}", pageNumber);
-      Client client = Utils.esClient();
-      String outputDirectory = PropertyManager.properties.getProperty("githubUserProfileEnricher.outputDirectory");
-      SearchRequestBuilder searchRequestBuilder = client.prepareSearch(PropertyManager.properties.getProperty("githubUserProfileEnricher.es.index"));
-
-      SearchResponse response = searchRequestBuilder.addField("profiles.GITHUB.username")
-        .setSearchType(SearchType.DFS_QUERY_THEN_FETCH)
-        .setFrom(pageNumber * 100).setSize(100).execute().actionGet();
-      List<String> failedUsernames = new ArrayList<>();
-      List<String> successUsernames = new ArrayList<>();
-
-      List<String> usernames = new ArrayList<>();
-      response.getHits().forEach(hit -> usernames.add(hit.field("profiles.GITHUB.username").getValue()));
-      usernames.parallelStream().forEach(username -> {
-        try {
-          String failedUsername = enrichUserProfile(username);
-          if (failedUsername != null) {
-            failedUsernames.add(failedUsername);
-          }
-          else {
-            successUsernames.add(username);
-          }
-        }
-        catch (IOException e) {
-          LOGGER.error("ERROR", e);
-          failedUsernames.add(username);
-        }
-      });
-      try {
-        Utils.writeToFile(successUsernames, "%sgithub.success.p.%d.json", outputDirectory, pageNumber);
-        Utils.writeToFile(failedUsernames, "%sgithub.failed.p.%d.json", outputDirectory, pageNumber);
-      }
-      catch (Exception e) {
-        LOGGER.error("Error write to files", e);
-      }
-      client.close();
-    }
   }
 }
