@@ -18,12 +18,9 @@ import org.joda.time.format.DateTimeFormatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
 import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.text.ParseException;
 import java.util.Calendar;
 import java.util.Locale;
@@ -155,54 +152,33 @@ public class GitHubUserCrawler {
     while (tryAgain) {
       String queryUrl = String.format(urlTemplate, 1, country, createdFrom, createdTo);
       LOGGER.debug("Catch total using url: " + queryUrl);
-
-      HttpClient httpClient = HttpClients.createDefault();
-      HttpPost p = new HttpPost(String.format("https://api.import.io/store/data/%s/_query?_user=%s&_apikey=%s",
-        connectorId, userId, URLEncoder.encode(apiKey, "UTF-8")));
-
-      String json = String.format("{ \"input\": {\"webpage/url\": \"%s\"} }", queryUrl);
-      p.setEntity(new StringEntity(json, ContentType.create("application/json", "UTF-8")));
-
-      HttpResponse r = null;
-      try {
-        r = httpClient.execute(p);
-      }
-      catch (Exception err) {
-        LOGGER.error("ERROR", err);
+      String content = Utils.postIIOAndReadContent(connectorId, userId, apiKey, queryUrl);
+      if (content == null) {
         continue;
       }
 
-      BufferedReader rd = new BufferedReader(new InputStreamReader(r.getEntity().getContent(), "UTF-8"));
-      StringBuilder content = new StringBuilder();
-      String line = "";
-      while ((line = rd.readLine()) != null) {
-        content.append(line);
-      }
-//      System.out.println(content);
-
-      if (content.indexOf("I/O Error getting page.") > 0) {
-        LOGGER.debug("I/O Error getting page => try it again.");
+      JsonNode root = Utils.readIIOResult(content);
+      if (!root.isArray()) {
+        LOGGER.debug("Error result => query: {}", queryUrl);
         continue;
       }
-      else {
-        tryAgain = false;
-      }
+      tryAgain = false;
 
-      int totalUsersIndex = content.indexOf("\"total_users\":");
-      if (totalUsersIndex < 0) {
+      if (root.size() == 0) {
+        LOGGER.debug("Empty result => query: {}", queryUrl);
+        continue;
+      }
+      root = root.get(0);
+
+      count = root.get("total_users").asInt();
+      if (count <= 0) {
         LOGGER.debug("No total => query: " + queryUrl);
         continue;
       }
-      LOGGER.debug("Extracting total-users number => query: {}", queryUrl);
-
-      int countAt = content.indexOf(".0,", totalUsersIndex);
-      count = Integer.valueOf(content.substring(totalUsersIndex + "\"total_users\":[".length() - 1, countAt));
-
-      LOGGER.debug("Extracting max-page-number number => query: {}", queryUrl);
-      maxPageNumber = count / 10 + (count % 10 > 0 ? 1 : 0);//Integer.valueOf(content.substring(maxPageNumberIndex + "\"max_page_number\":[".length() - 1, maxPageNumberAt));
+      maxPageNumber = count / 10 + (count % 10 > 0 ? 1 : 0);
     }
 
-    LOGGER.debug("Total user for the period of {}..{}: {}", createdFrom, createdTo, count);
+    LOGGER.debug("Total user for the period of {}..{}: {} , max-page: ", createdFrom, createdTo, count, maxPageNumber);
     return count + "," + maxPageNumber;
   }
 
@@ -241,41 +217,21 @@ public class GitHubUserCrawler {
         while (tryAgain) {
           String queryUrl = String.format(urlTemplate, pageNumber, country, createdFrom, createdTo);
           LOGGER.debug("Query users using url: " + queryUrl);
-
-//          pool.
-//            HttpClients.custom().setConnectionManager(clientConnectionManager);
-          HttpClient httpClient = HttpClients.custom().setConnectionManager(clientConnectionManager).build();
-//          HttpClient httpClient = HttpClients.createDefault();
-
-          HttpPost p = new HttpPost(String.format("https://api.import.io/store/data/%s/_query?_user=%s&_apikey=%s",
-            connectorId, userId, URLEncoder.encode(apiKey, "UTF-8")));
-
-          p.setEntity(new StringEntity(Utils.toIOQueryUrl(queryUrl), ContentType.create("application/json")));
-
-          HttpResponse r = null;
-
-          try {
-            r = httpClient.execute(p);
+          String content = Utils.postIIOAndReadContent(connectorId, userId, apiKey, queryUrl);
+          JsonNode root = Utils.readIIOResult(content);
+          if (!root.isArray()) {
+            LOGGER.debug("Error result => query: {}", queryUrl);
+            continue;
           }
-          catch (Exception e) {
-            LOGGER.error("ERROR", e);
+          tryAgain = false;
+
+          if (root.size() == 0) {
+            LOGGER.debug("Empty result => Not write to file {}", filename);
             continue;
           }
 
-          String content = EntityUtils.toString(r.getEntity());
-          if (content.indexOf("I/O Error getting page.") > 0) {
-            LOGGER.debug("I/O Error getting page => try it again.");
-            continue;
-          }
-
-          ArrayNode root = (ArrayNode)Utils.readIIOResult(content);
-          if (!root.hasNonNull(0)) {
-            LOGGER.debug("Empty result => query: {}", queryUrl);
-            continue;
-          }
           Utils.writeToFile(root, filename);
           LOGGER.debug("OK => wrote to file: " + filename);
-          tryAgain = false;
         }
       }
       catch (Exception e) {

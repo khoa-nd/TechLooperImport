@@ -79,8 +79,7 @@ public class GitHubUserProfileEnricher {
     List<String> successUsernames = new ArrayList<>();
 
     List<String> usernames = new ArrayList<>();
-    usernames.add("arevutsky");
-//    response.getHits().forEach(hit -> usernames.add(hit.field("profiles.GITHUB.username").getValue()));
+    response.getHits().forEach(hit -> usernames.add(hit.field("profiles.GITHUB.username").getValue()));
     usernames.parallelStream().forEach(username -> {
       try {
         String failedUsername = enrichUserProfile(username);
@@ -116,36 +115,25 @@ public class GitHubUserProfileEnricher {
 
     boolean tryAgain = true;
     while (tryAgain) {
-      HttpClient httpClient = HttpClients.createDefault();
-      HttpPost post = new HttpPost(String.format("https://api.import.io/store/data/%s/_query?_user=%s&_apikey=%s",
-        connectorId, userId, URLEncoder.encode(apiKey, "UTF-8")));
-
       String queryUrl = String.format(queryUrlTemplate, username);
-      post.setEntity(new StringEntity(Utils.toIOQueryUrl(queryUrl), ContentType.create("application/json", "UTF-8")));
-
-      String content = null;
-      try {
-        HttpResponse response = httpClient.execute(post);
-        content = EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
-      }
-      catch (Exception err) {
-        LOGGER.error("ERROR", err);
+      String content = Utils.postIIOAndReadContent(connectorId, userId,  apiKey, queryUrl);
+      if (content == null) {
         continue;
       }
 
       JsonNode root = Utils.readIIOResult(content);
       if (!root.isArray()) {
         LOGGER.debug("Error result => query: {}", queryUrl);
-        break;
+        continue;
       }
+      tryAgain = false;
 
-      ArrayNode arrayNode = (ArrayNode) root;
-      if (!arrayNode.hasNonNull(0)) {
+      if (root.size() == 0) {
         LOGGER.debug("Empty result => query: {}", queryUrl);
-        break;
+        continue;
       }
+      root = root.get(0);
 
-      root = arrayNode.get(0);
       ObjectNode writableRoot = (ObjectNode) root;
       for (String field : refineImportIOFields) {
         JsonNode node = root.at("/" + field);
@@ -162,12 +150,11 @@ public class GitHubUserProfileEnricher {
       writableRoot.put("username", username);
       Utils.writeToFile(root.toString(), String.format("%sgithub.%s.post.json", outputDirectory, username));
       LOGGER.debug("OK => Post user \"{}\" to api ", username);
-      arrayNode = JsonNodeFactory.instance.arrayNode().add(root);
+      ArrayNode arrayNode = JsonNodeFactory.instance.arrayNode().add(root);
       if (Utils.postJsonString(enrichUserApi, arrayNode.toString()) != 204) {
         LOGGER.error("Error when posting json {} to api {}", arrayNode, enrichUserApi);
         return username;
       }
-      tryAgain = false;
     }
     return null;
   }

@@ -1,18 +1,16 @@
 package com.techlooper.utils;
 
-import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.databind.node.MissingNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.ImmutableSettings;
@@ -24,6 +22,8 @@ import org.slf4j.LoggerFactory;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -36,6 +36,34 @@ import java.util.List;
 public class Utils {
 
   private static Logger LOGGER = LoggerFactory.getLogger(Utils.class);
+
+  public static JsonNode onlyOneNode(JsonNode root) {
+    ArrayNode arrayNode = (ArrayNode) root;
+    if (arrayNode.size() == 1) {
+      return arrayNode.get(0);
+    }
+    return null;
+  }
+
+  public static String postIIOAndReadContent(String connectorId, String userId, String apiKey, String queryUrl) throws UnsupportedEncodingException {
+    return postAndReadContent(String.format("https://api.import.io/store/data/%s/_query?_user=%s&_apikey=%s",
+      connectorId, userId, URLEncoder.encode(apiKey, "UTF-8")), Utils.toIOQueryUrl(queryUrl));
+  }
+
+  public static String postAndReadContent(String url, String json) {
+    HttpClient httpClient = HttpClients.createDefault();
+    HttpPost post = new HttpPost(url);
+    post.setEntity(new StringEntity(json, ContentType.create("application/json", "UTF-8")));
+    String content = null;
+    try {
+      HttpResponse response = httpClient.execute(post);
+      content = EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
+    }
+    catch (Exception err) {
+      LOGGER.error("ERROR", err);
+    }
+    return content;
+  }
 
   public static void sureDirectory(String dirPath) {
     File dir = new File(dirPath);
