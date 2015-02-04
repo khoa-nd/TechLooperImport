@@ -96,9 +96,9 @@ public class GitHubUserProfileEnricher {
     ArrayNode jsonUsers = jsonFile.exists() ? (ArrayNode) Utils.readJson(jsonFile) : crawlUsersProfile(pageNumber, executorService, filename);
 
 //    executorService.execute(() -> {
-    LOGGER.debug(">>>>Start posting to api<<<<");
     try {
-      Thread.sleep(3000);
+      Thread.sleep(2000);
+      LOGGER.debug(">>>>Start posting to api<<<<");
       if (Utils.postJsonString(enrichUserApi, jsonUsers.toString()) != 204) {
         LOGGER.error("Error when posting json to api. >_<");
       }
@@ -119,7 +119,7 @@ public class GitHubUserProfileEnricher {
 
     SearchResponse response = searchRequestBuilder.addField("profiles.GITHUB.username")
       .setSearchType(SearchType.DFS_QUERY_THEN_FETCH)
-      .setFrom(pageNumber * 100).setSize(100).execute().actionGet();
+      .setFrom(pageNumber * 10).setSize(10).execute().actionGet();
 
     List<String> usernames = new ArrayList<>();
     response.getHits().forEach(hit -> usernames.add(hit.field("profiles.GITHUB.username").getValue()));
