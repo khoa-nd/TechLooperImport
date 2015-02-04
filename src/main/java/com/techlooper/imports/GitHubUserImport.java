@@ -63,5 +63,6 @@ public class GitHubUserImport {
       }
     });
 
+    LOGGER.debug("DONE DONE DONE!!!!!");
   }
 }
