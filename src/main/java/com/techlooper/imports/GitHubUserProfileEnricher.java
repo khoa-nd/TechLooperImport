@@ -87,12 +87,18 @@ public class GitHubUserProfileEnricher {
   private static void doQuery(int pageNumber, ExecutorService executorService) throws IOException, InterruptedException {
     LOGGER.debug("New query ES page created {}", pageNumber);
     String filename = String.format("%sgithub.post.p.%d.json", outputDirectory, pageNumber);
+    if (new File(filename + ".ok").exists()) {
+      LOGGER.debug("Done done done!!");
+      return;
+    }
+
     File jsonFile = new File(filename);
     ArrayNode jsonUsers = jsonFile.exists() ? (ArrayNode) Utils.readJson(jsonFile) : crawlUsersProfile(pageNumber, executorService, filename);
 
     executorService.execute(() -> {
       LOGGER.debug(">>>>Start posting to api<<<<");
       try {
+        Thread.sleep(30000);
         if (Utils.postJsonString(enrichUserApi, jsonUsers.toString()) != 204) {
           LOGGER.error("Error when posting json to api. >_<");
         }
@@ -146,7 +152,6 @@ public class GitHubUserProfileEnricher {
     final JsonNode[] profileNode = {null};
     LOGGER.debug("Do import.io query {}", queryUrl);
     Utils.doIIOQuery(connectorId, userId, apiKey, queryUrl, node -> {
-      LOGGER.debug("Result from query {} is {}", queryUrl, node);
       if (node.size() == 1) {
         JsonNode root = node.get(0);
         refineImportIOFields.forEach(fieldName -> {
