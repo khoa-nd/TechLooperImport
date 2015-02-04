@@ -95,22 +95,22 @@ public class GitHubUserProfileEnricher {
     File jsonFile = new File(filename);
     ArrayNode jsonUsers = jsonFile.exists() ? (ArrayNode) Utils.readJson(jsonFile) : crawlUsersProfile(pageNumber, executorService, filename);
 
-    executorService.execute(() -> {
-      LOGGER.debug(">>>>Start posting to api<<<<");
-      try {
-        Thread.sleep(30000);
-        if (Utils.postJsonString(enrichUserApi, jsonUsers.toString()) != 204) {
-          LOGGER.error("Error when posting json to api. >_<");
-        }
-        else {
-          Files.move(Paths.get(filename), Paths.get(filename + ".ok"));
-        }
+//    executorService.execute(() -> {
+    LOGGER.debug(">>>>Start posting to api<<<<");
+    try {
+      Thread.sleep(30000);
+      if (Utils.postJsonString(enrichUserApi, jsonUsers.toString()) != 204) {
+        LOGGER.error("Error when posting json to api. >_<");
       }
-      catch (Exception e) {
-        LOGGER.error("ERROR", e);
+      else {
+        Files.move(Paths.get(filename), Paths.get(filename + ".ok"));
       }
-      LOGGER.debug(">>>>Done posting to api<<<<");
-    });
+    }
+    catch (Exception e) {
+      LOGGER.error("ERROR", e);
+    }
+    LOGGER.debug(">>>>Done posting to api<<<<");
+//    });
   }
 
   private static ArrayNode crawlUsersProfile(int pageNumber, ExecutorService executorService, String filename) throws InterruptedException, IOException {
