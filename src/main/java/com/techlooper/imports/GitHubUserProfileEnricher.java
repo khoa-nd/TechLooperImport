@@ -98,7 +98,7 @@ public class GitHubUserProfileEnricher {
 //    executorService.execute(() -> {
     LOGGER.debug(">>>>Start posting to api<<<<");
     try {
-      Thread.sleep(30000);
+      Thread.sleep(3000);
       if (Utils.postJsonString(enrichUserApi, jsonUsers.toString()) != 204) {
         LOGGER.error("Error when posting json to api. >_<");
       }
