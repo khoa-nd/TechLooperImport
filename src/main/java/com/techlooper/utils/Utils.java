@@ -3,6 +3,7 @@ package com.techlooper.utils;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.techlooper.pojo.FootPrint;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
@@ -36,6 +37,23 @@ import java.util.function.Consumer;
 public class Utils {
 
   private static Logger LOGGER = LoggerFactory.getLogger(Utils.class);
+
+  public static FootPrint loadFootPrint(String filePath) {
+    File file = new File(filePath);
+    if (file.exists()) {
+      try {
+        return new ObjectMapper().readValue(file, FootPrint.class);
+      }
+      catch (Exception e) {
+        LOGGER.error("ERROR", e);
+      }
+    }
+    return FootPrint.FootPrintBuilder.footPrint().build();
+  }
+
+  public static void saveFootPrint(String filePath, FootPrint footPrint) throws IOException {
+    new ObjectMapper().writeValue(new File(filePath), footPrint);
+  }
 
   public static void doIIOQuery(String connectorId, String userId, String apiKey, String queryUrl,
                                 Consumer<JsonNode> consumer) {
@@ -146,4 +164,12 @@ public class Utils {
     writer.write(content);
     writer.close();
   }
+  //    Files.lines(Paths.get(inputFile), StandardCharsets.UTF_8).parallel().forEach(username -> {
+//      try {
+//        enrichUserProfile(username);
+//      }
+//      catch (Exception e) {
+//        LOGGER.error("ERROR:", e);
+//      }
+//    });
 }
