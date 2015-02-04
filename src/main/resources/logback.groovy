@@ -95,4 +95,4 @@ logger("com.techlooper.imports.GitHubUserProfileEnricher", ALL, ["CONSOLE","ENRI
 logger("com.techlooper.imports.GitHubUserImport", ALL, ["CONSOLE", "IMPORT"], Boolean.FALSE)
 logger("com.techlooper.utils.PropertyManager", ALL, ["CONSOLE", "PROPERTIES"], Boolean.FALSE)
 
-root(ALL, ["CONSOLE", "ROOT"])
+root(ERROR, ["CONSOLE", "ROOT"])
