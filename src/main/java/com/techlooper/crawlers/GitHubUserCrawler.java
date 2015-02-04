@@ -24,12 +24,23 @@ public class GitHubUserCrawler {
 
   private static Logger LOGGER = LoggerFactory.getLogger(GitHubUserCrawler.class);
 
-  private static PoolingHttpClientConnectionManager clientConnectionManager = new PoolingHttpClientConnectionManager();
+//  private static PoolingHttpClientConnectionManager clientConnectionManager = new PoolingHttpClientConnectionManager();
 
-  private static enum DIVISION {NOT, BINARY}
+  private static enum DIVISION {NOT, BINARY};
+
+  private static String outputDirectory = PropertyManager.properties.getProperty("githubUserCrawler.outputDirectory");
+
+  private static String userId = PropertyManager.properties.getProperty("githubUserCrawler.import.io.userId");
+
+  private static String apiKey = PropertyManager.properties.getProperty("githubUserCrawler.import.io.apiKey");
+
+  private static String urlTemplate = PropertyManager.properties.getProperty("githubUserCrawler.user.searchTemplate");
+
+  private static String totalUsersConnectorId = PropertyManager.properties.getProperty("githubUserCrawler.import.io.connector.github.totalUsers");
+
+  private static String userConnectorId = PropertyManager.properties.getProperty("githubUserCrawler.import.io.connector.github");
 
   public static void main(String[] args) throws IOException, InterruptedException, ParseException {
-    String outputDirectory = PropertyManager.properties.getProperty("githubUserCrawler.outputDirectory");
     Utils.sureDirectory(outputDirectory);
 //    final String[] countries = {"vietnam"x, "japan"x, "thailand"x, "singapore"x, "malaysia"x, "indonesia"x, "australia"x, "china"x, "india"x, "korea", "taiwan",
 //      "spain", "ukraine", "poland", "russia", "bulgaria", "turkey", "greece", "serbia", "romania", "belarus", "lithuania", "estonia",
@@ -130,17 +141,12 @@ public class GitHubUserCrawler {
   }
 
   private static String count(String country, String createdFrom, String createdTo) throws IOException, InterruptedException {
-    String userId = PropertyManager.properties.getProperty("githubUserCrawler.import.io.userId");
-    String apiKey = PropertyManager.properties.getProperty("githubUserCrawler.import.io.apiKey");
-    String urlTemplate = PropertyManager.properties.getProperty("githubUserCrawler.user.searchTemplate");
-    String connectorId = PropertyManager.properties.getProperty("githubUserCrawler.import.io.connector.github.totalUsers");
-
     final Integer[] count = {0};
     final Integer[] maxPageNumber = {1};
 
     String queryUrl = String.format(urlTemplate, 1, country, createdFrom, createdTo);
     LOGGER.debug("Do import.io query {}", queryUrl);
-    Utils.doIIOQuery(connectorId, userId, apiKey, queryUrl, countInfo -> {
+    Utils.doIIOQuery(totalUsersConnectorId, userId, apiKey, queryUrl, countInfo -> {
       LOGGER.debug("Result from query {} is {}", queryUrl, countInfo);
       countInfo = countInfo.get(0);
       count[0] = countInfo.get("total_users").asInt();
@@ -167,13 +173,6 @@ public class GitHubUserCrawler {
 
     public void run() {
       LOGGER.debug("Starting new thread...");
-
-      String userId = PropertyManager.properties.getProperty("githubUserCrawler.import.io.userId");
-      String apiKey = PropertyManager.properties.getProperty("githubUserCrawler.import.io.apiKey");
-      String urlTemplate = PropertyManager.properties.getProperty("githubUserCrawler.user.searchTemplate");
-      String connectorId = PropertyManager.properties.getProperty("githubUserCrawler.import.io.connector.github");
-      String outputDirectory = PropertyManager.properties.getProperty("githubUserCrawler.outputDirectory");
-
       String period = String.format("%s..%s", createdFrom, createdTo);
       String filename = String.format("%s%s.%s.%d.json", outputDirectory, country, period, pageNumber);
       File f = new File(filename);
@@ -183,7 +182,7 @@ public class GitHubUserCrawler {
 
       String queryUrl = String.format(urlTemplate, pageNumber, country, createdFrom, createdTo);
       LOGGER.debug("Do import.io query {}", queryUrl);
-      Utils.doIIOQuery(connectorId, userId, apiKey, queryUrl, users -> {
+      Utils.doIIOQuery(userConnectorId, userId, apiKey, queryUrl, users -> {
         LOGGER.debug("Result from query {} is {}", queryUrl, users);
         try {
           LOGGER.debug("OK => Write to file: " + filename);

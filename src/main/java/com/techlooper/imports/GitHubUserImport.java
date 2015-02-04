@@ -20,10 +20,11 @@ public class GitHubUserImport {
 
   private static Logger LOGGER = LoggerFactory.getLogger(GitHubUserImport.class);
 
-  public static void main(String[] args) throws IOException {
-    String inputDirectory = PropertyManager.properties.getProperty("githubUserImport.inputDirectory");
-    String addUserApi = PropertyManager.properties.getProperty("githubUserImport.techlooper.api.addUser");
+  private static String inputDirectory = PropertyManager.properties.getProperty("githubUserImport.inputDirectory");
 
+  private static String addUserApi = PropertyManager.properties.getProperty("githubUserImport.techlooper.api.addUser");
+
+  public static void main(String[] args) throws IOException {
     LOGGER.info("Configuration info: \n  - InputDirectory: {}\n  - AddUserApi: {}", inputDirectory, addUserApi);
 
     Files.walk(Paths.get(inputDirectory), FileVisitOption.FOLLOW_LINKS).parallel().forEach(filePath -> {
