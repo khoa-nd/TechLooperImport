@@ -1,6 +1,8 @@
 package com.techlooper.utils;
 
 import com.techlooper.exception.InitializationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.URL;
 import java.util.Properties;
@@ -9,6 +11,8 @@ import java.util.Properties;
  * Created by phuonghqh on 1/21/15.
  */
 public class PropertyManager {
+
+  private static final Logger LOGGER = LoggerFactory.getLogger(PropertyManager.class);
 
   public static Properties properties = new Properties();
 
@@ -23,5 +27,11 @@ public class PropertyManager {
       e.printStackTrace(System.err);
       throw new InitializationException(e.getMessage());
     }
+  }
+
+  public static String getProperty(String key) {
+    String value = properties.getProperty(key);
+    LOGGER.debug("Use property key: {} = {} ", key, value);
+    return value;
   }
 }

@@ -1,5 +1,7 @@
 package com.techlooper.imports;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.techlooper.utils.PropertyManager;
 import com.techlooper.utils.Utils;
 import org.slf4j.Logger;
@@ -18,10 +20,11 @@ public class GitHubUserImport {
 
   private static Logger LOGGER = LoggerFactory.getLogger(GitHubUserImport.class);
 
-  public static void main(String[] args) throws IOException {
-    String inputDirectory = PropertyManager.properties.getProperty("githubUserImport.inputDirectory");
-    String addUserApi = PropertyManager.properties.getProperty("githubUserImport.techlooper.api.addUser");
+  private static String inputDirectory = PropertyManager.properties.getProperty("githubUserImport.inputDirectory");
 
+  private static String addUserApi = PropertyManager.properties.getProperty("githubUserImport.techlooper.api.addUser");
+
+  public static void main(String[] args) throws IOException {
     LOGGER.info("Configuration info: \n  - InputDirectory: {}\n  - AddUserApi: {}", inputDirectory, addUserApi);
 
     Files.walk(Paths.get(inputDirectory), FileVisitOption.FOLLOW_LINKS).parallel().forEach(filePath -> {
@@ -30,14 +33,21 @@ public class GitHubUserImport {
         try {
           StringBuilder builder = new StringBuilder();
           Files.readAllLines(filePath, StandardCharsets.UTF_8).forEach(builder::append);
-          String json = builder.toString();
-          json = json.replaceAll("image_url/_alt", "fullname")
-            /*.replaceAll("image_url", "imageUrl")
-            .replaceAll("datejoin", "dateJoin")*/
-            .replaceAll("\"},", ",\"crawlerSource\": \"GITHUB\"},")
-            .replaceAll("\"}]", ",\"crawlerSource\": \"GITHUB\"}]");
-          LOGGER.debug("Posting json: {} to Url: {}", json, addUserApi);
 
+          JsonNode root = Utils.readJson(builder.toString());
+          root.forEach(n -> {
+            ObjectNode node = (ObjectNode) n;
+            node.put("crawlersource", "GITHUB");
+            node.put("imageurl", node.get("image_url").asText());
+            node.put("fullname", node.get("image_url/_alt").asText());
+
+            node.remove("image_url");
+            node.remove("image_url/_alt");
+          });
+
+          LOGGER.debug("Posting json: {} to Api", root);
+
+          String json = root.toString();
           int code = Utils.postJsonString(addUserApi, json);
           if (code == 204) {
             Files.move(filePath, Paths.get(filePath.toString() + ".ok"));
@@ -53,5 +63,6 @@ public class GitHubUserImport {
       }
     });
 
+    LOGGER.debug("DONE DONE DONE!!!!!");
   }
 }
