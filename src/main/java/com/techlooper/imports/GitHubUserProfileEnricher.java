@@ -14,12 +14,18 @@ import org.elasticsearch.client.Client;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * Created by phuonghqh on 1/30/15.
@@ -80,6 +86,28 @@ public class GitHubUserProfileEnricher {
 
   private static void doQuery(int pageNumber, ExecutorService executorService) throws IOException, InterruptedException {
     LOGGER.debug("New query ES page created {}", pageNumber);
+    String filename = String.format("%sgithub.post.p.%d.json", outputDirectory, pageNumber);
+    File jsonFile = new File(filename);
+    ArrayNode jsonUsers = jsonFile.exists() ? (ArrayNode) Utils.readJson(jsonFile) : crawlUsersProfile(pageNumber, executorService, filename);
+
+    executorService.execute(() -> {
+      LOGGER.debug(">>>>Start posting to api<<<<");
+      try {
+        if (Utils.postJsonString(enrichUserApi, jsonUsers.toString()) != 204) {
+          LOGGER.error("Error when posting json to api. >_<");
+        }
+        else {
+          Files.move(Paths.get(filename), Paths.get(filename + ".ok"));
+        }
+      }
+      catch (Exception e) {
+        LOGGER.error("ERROR", e);
+      }
+      LOGGER.debug(">>>>Done posting to api<<<<");
+    });
+  }
+
+  private static ArrayNode crawlUsersProfile(int pageNumber, ExecutorService executorService, String filename) throws InterruptedException, IOException {
     Client client = Utils.esClient();
     SearchRequestBuilder searchRequestBuilder = client.prepareSearch(PropertyManager.properties.getProperty("githubUserProfileEnricher.es.index"));
 
@@ -92,12 +120,13 @@ public class GitHubUserProfileEnricher {
 
     List<Callable<JsonNode>> jobs = new ArrayList<>();
     usernames.forEach(username -> jobs.add(() -> enrichUserProfile(username)));
+    client.close();
 
-    ArrayNode arrayNode = JsonNodeFactory.instance.arrayNode();
+    ArrayNode jsonUsers = JsonNodeFactory.instance.arrayNode();
     executorService.invokeAll(jobs).forEach(future -> {
       try {
         JsonNode profile = future.get();
-        Optional.ofNullable(profile).ifPresent(arrayNode::add);
+        Optional.ofNullable(profile).ifPresent(jsonUsers::add);
       }
       catch (InterruptedException e) {
         LOGGER.error("ERROR", e);
@@ -107,24 +136,9 @@ public class GitHubUserProfileEnricher {
       }
     });
 
-    Utils.writeToFile(arrayNode, String.format("%sgithub.post.p.%d.json", outputDirectory, pageNumber));
+    Utils.writeToFile(jsonUsers, filename);
 
-//    executorService.execute(new PostApiJob(arrayNode));
-
-    LOGGER.debug(">>>>Start posting to api<<<<");
-    try {
-      Thread.sleep(30000);
-      if (Utils.postJsonString(enrichUserApi, arrayNode.toString()) != 204) {
-        LOGGER.error("Error when posting json {} to api {}", arrayNode, enrichUserApi);
-        System.exit(1);
-      }
-    }
-    catch (Exception e) {
-      LOGGER.error("ERROR", e);
-    }
-    LOGGER.debug(">>>>Done posting to api<<<<");
-
-    client.close();
+    return jsonUsers;
   }
 
   private static JsonNode enrichUserProfile(String username) {
