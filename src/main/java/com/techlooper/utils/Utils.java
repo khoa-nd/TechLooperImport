@@ -38,6 +38,10 @@ public class Utils {
 
   private static Logger LOGGER = LoggerFactory.getLogger(Utils.class);
 
+  public static JsonNode readJson(File file) throws IOException {
+    return new ObjectMapper().readTree(file);
+  }
+
 //  public static FootPrint[] loadFootPrints(String filePath) {
 //    File file = new File(filePath);
 //    if (file.exists()) {
