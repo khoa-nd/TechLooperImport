@@ -38,7 +38,21 @@ public class Utils {
 
   private static Logger LOGGER = LoggerFactory.getLogger(Utils.class);
 
-  public static FootPrint loadFootPrint(String filePath) {
+//  public static FootPrint[] loadFootPrints(String filePath) {
+//    File file = new File(filePath);
+//    if (file.exists()) {
+//      try {
+//        return new ObjectMapper().readValue(file, FootPrint[].class);
+//      }
+//      catch (Exception e) {
+//        LOGGER.error("ERROR", e);
+//      }
+//    }
+//    return new FootPrint[]{};
+//  }
+
+  public static FootPrint readFootPrint(String filePath) {
+    LOGGER.debug("Read foot-print at {}", filePath);
     File file = new File(filePath);
     if (file.exists()) {
       try {
@@ -51,7 +65,8 @@ public class Utils {
     return FootPrint.FootPrintBuilder.footPrint().build();
   }
 
-  public static void saveFootPrint(String filePath, FootPrint footPrint) throws IOException {
+  public static void writeFootPrint(String filePath, FootPrint footPrint) throws IOException {
+    LOGGER.debug("Save foot-print to {}", filePath);
     new ObjectMapper().writeValue(new File(filePath), footPrint);
   }
 

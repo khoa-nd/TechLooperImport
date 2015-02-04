@@ -43,8 +43,11 @@ public class GitHubUserProfileEnricher {
 
   public static void main(String[] args) throws IOException {
     Utils.sureDirectory(outputDirectory);
-    FootPrint footPrint = Utils.loadFootPrint(footPrintFilePath);
+
+    FootPrint footPrint = Utils.readFootPrint(footPrintFilePath);
     queryES(footPrint);
+
+    LOGGER.debug("DONE DONE DONE!!!!!");
   }
 
   private static void queryES(FootPrint footPrint) throws IOException {
@@ -58,7 +61,8 @@ public class GitHubUserProfileEnricher {
 
     for (int pageNumber = footPrint.getLastPageNumber(); pageNumber < maxPageNumber; pageNumber++) {
       doQuery(pageNumber);
-      Utils.saveFootPrint(String.format("%sgithub.footprint.json", outputDirectory),
+
+      Utils.writeFootPrint(String.format("%sgithub.footprint.json", outputDirectory),
         FootPrint.FootPrintBuilder.footPrint().withLastPageNumber(pageNumber).build());
     }
 
