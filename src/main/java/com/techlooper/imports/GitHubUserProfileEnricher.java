@@ -66,7 +66,7 @@ public class GitHubUserProfileEnricher {
     SearchResponse response = searchRequestBuilder.setSearchType(SearchType.COUNT).execute().actionGet();
 
     long totalUsers = response.getHits().getTotalHits();
-    long maxPageNumber = (totalUsers % 50 == 0) ? totalUsers / 50 : totalUsers / 50 + 1;
+    long maxPageNumber = (totalUsers % 10 == 0) ? totalUsers / 10 : totalUsers / 10 + 1;
 
     ExecutorService executorService = Executors.newFixedThreadPool(20);
     for (int pageNumber = footPrint.getLastPageNumber(); pageNumber < maxPageNumber; pageNumber++) {
@@ -98,7 +98,7 @@ public class GitHubUserProfileEnricher {
 //    executorService.execute(() -> {
     LOGGER.debug(">>>>Start posting to api<<<<");
     try {
-      Thread.sleep(30000);
+      Thread.sleep(3000);
       if (Utils.postJsonString(enrichUserApi, jsonUsers.toString()) != 204) {
         LOGGER.error("Error when posting json to api. >_<");
       }
