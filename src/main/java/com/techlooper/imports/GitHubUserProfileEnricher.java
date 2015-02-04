@@ -19,8 +19,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 
 /**
  * Created by phuonghqh on 1/30/15.
@@ -54,7 +53,7 @@ public class GitHubUserProfileEnricher {
     LOGGER.debug("DONE DONE DONE!!!!!");
   }
 
-  private static void queryES(FootPrint footPrint) throws IOException {
+  private static void queryES(FootPrint footPrint) {
     Client client = Utils.esClient();
 
     SearchRequestBuilder searchRequestBuilder = client.prepareSearch(PropertyManager.properties.getProperty("githubUserProfileEnricher.es.index"));
@@ -65,17 +64,21 @@ public class GitHubUserProfileEnricher {
 
     ExecutorService executorService = Executors.newFixedThreadPool(20);
     for (int pageNumber = footPrint.getLastPageNumber(); pageNumber < maxPageNumber; pageNumber++) {
-      doQuery(pageNumber, executorService);
-
-      Utils.writeFootPrint(String.format("%sgithub.footprint.json", outputDirectory),
-        FootPrint.FootPrintBuilder.footPrint().withLastPageNumber(pageNumber).build());
+      try {
+        doQuery(pageNumber, executorService);
+        Utils.writeFootPrint(String.format("%sgithub.footprint.json", outputDirectory),
+          FootPrint.FootPrintBuilder.footPrint().withLastPageNumber(pageNumber).build());
+      }
+      catch (Exception e) {
+        LOGGER.error("ERROR", e);
+      }
     }
     executorService.shutdown();
 
     client.close();
   }
 
-  private static void doQuery(int pageNumber, ExecutorService executorService) throws IOException {
+  private static void doQuery(int pageNumber, ExecutorService executorService) throws IOException, InterruptedException {
     LOGGER.debug("New query ES page created {}", pageNumber);
     Client client = Utils.esClient();
     SearchRequestBuilder searchRequestBuilder = client.prepareSearch(PropertyManager.properties.getProperty("githubUserProfileEnricher.es.index"));
@@ -83,24 +86,28 @@ public class GitHubUserProfileEnricher {
     SearchResponse response = searchRequestBuilder.addField("profiles.GITHUB.username")
       .setSearchType(SearchType.DFS_QUERY_THEN_FETCH)
       .setFrom(pageNumber * 100).setSize(100).execute().actionGet();
-    List<String> failedUsernames = new ArrayList<>();
 
     List<String> usernames = new ArrayList<>();
     response.getHits().forEach(hit -> usernames.add(hit.field("profiles.GITHUB.username").getValue()));
 
+    List<Callable<JsonNode>> jobs = new ArrayList<>();
+    usernames.forEach(username -> jobs.add(() -> enrichUserProfile(username)));
+
     ArrayNode arrayNode = JsonNodeFactory.instance.arrayNode();
-    usernames.parallelStream().forEach(username -> {
-      JsonNode profile = enrichUserProfile(username);
-      Optional.ofNullable(profile).ifPresent(arrayNode::add);
-      if (profile == null) {
-        failedUsernames.add(username);
+    executorService.invokeAll(jobs).forEach(future -> {
+      try {
+        JsonNode profile = future.get();
+        Optional.ofNullable(profile).ifPresent(arrayNode::add);
+      }
+      catch (InterruptedException e) {
+        LOGGER.error("ERROR", e);
+      }
+      catch (ExecutionException e) {
+        LOGGER.error("ERROR", e);
       }
     });
 
     Utils.writeToFile(arrayNode, String.format("%sgithub.post.p.%d.json", outputDirectory, pageNumber));
-    if (failedUsernames.size() > 0) {
-      Utils.writeToFile(failedUsernames, String.format("%sgithub.failed.p.%d.json", outputDirectory, pageNumber));
-    }
 
     executorService.execute(new PostApiJob(arrayNode));
 
