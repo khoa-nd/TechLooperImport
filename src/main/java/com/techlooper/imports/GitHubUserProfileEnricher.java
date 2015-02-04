@@ -109,7 +109,20 @@ public class GitHubUserProfileEnricher {
 
     Utils.writeToFile(arrayNode, String.format("%sgithub.post.p.%d.json", outputDirectory, pageNumber));
 
-    executorService.execute(new PostApiJob(arrayNode));
+//    executorService.execute(new PostApiJob(arrayNode));
+
+    LOGGER.debug(">>>>Start posting to api<<<<");
+    try {
+      Thread.sleep(30000);
+      if (Utils.postJsonString(enrichUserApi, arrayNode.toString()) != 204) {
+        LOGGER.error("Error when posting json {} to api {}", arrayNode, enrichUserApi);
+        System.exit(1);
+      }
+    }
+    catch (Exception e) {
+      LOGGER.error("ERROR", e);
+    }
+    LOGGER.debug(">>>>Done posting to api<<<<");
 
     client.close();
   }
@@ -136,26 +149,26 @@ public class GitHubUserProfileEnricher {
     return profileNode[0];
   }
 
-  private static class PostApiJob implements Runnable {
-
-    private JsonNode arrayNode;
-
-    public PostApiJob(JsonNode arrayNode) {
-      this.arrayNode = arrayNode;
-    }
-
-    public void run() {
-      LOGGER.debug(">>>>Start posting to api<<<<");
-      try {
-        if (Utils.postJsonString(enrichUserApi, arrayNode.toString()) != 204) {
-          LOGGER.error("Error when posting json {} to api {}", arrayNode, enrichUserApi);
-          System.exit(1);
-        }
-      }
-      catch (Exception e) {
-        LOGGER.error("ERROR", e);
-      }
-      LOGGER.debug(">>>>Done posting to api<<<<");
-    }
-  }
+//  private static class PostApiJob implements Runnable {
+//
+//    private JsonNode arrayNode;
+//
+//    public PostApiJob(JsonNode arrayNode) {
+//      this.arrayNode = arrayNode;
+//    }
+//
+//    public void run() {
+//      LOGGER.debug(">>>>Start posting to api<<<<");
+//      try {
+//        if (Utils.postJsonString(enrichUserApi, arrayNode.toString()) != 204) {
+//          LOGGER.error("Error when posting json {} to api {}", arrayNode, enrichUserApi);
+//          System.exit(1);
+//        }
+//      }
+//      catch (Exception e) {
+//        LOGGER.error("ERROR", e);
+//      }
+//      LOGGER.debug(">>>>Done posting to api<<<<");
+//    }
+//  }
 }
