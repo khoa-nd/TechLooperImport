@@ -19,6 +19,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * Created by phuonghqh on 1/30/15.
@@ -41,6 +43,8 @@ public class GitHubUserProfileEnricher {
 
   private static String queryUrlTemplate = PropertyManager.getProperty("githubUserProfileEnricher.queryUrlTemplate");
 
+  private static String enrichUserApi = PropertyManager.getProperty("githubUserProfileEnricher.techlooper.api.enrichUser");
+
   public static void main(String[] args) throws IOException {
     Utils.sureDirectory(outputDirectory);
 
@@ -59,17 +63,19 @@ public class GitHubUserProfileEnricher {
     long totalUsers = response.getHits().getTotalHits();
     long maxPageNumber = (totalUsers % 100 == 0) ? totalUsers / 100 : totalUsers / 100 + 1;
 
+    ExecutorService executorService = Executors.newFixedThreadPool(20);
     for (int pageNumber = footPrint.getLastPageNumber(); pageNumber < maxPageNumber; pageNumber++) {
-      doQuery(pageNumber);
+      doQuery(pageNumber, executorService);
 
       Utils.writeFootPrint(String.format("%sgithub.footprint.json", outputDirectory),
         FootPrint.FootPrintBuilder.footPrint().withLastPageNumber(pageNumber).build());
     }
+    executorService.shutdown();
 
     client.close();
   }
 
-  private static void doQuery(int pageNumber) throws IOException {
+  private static void doQuery(int pageNumber, ExecutorService executorService) throws IOException {
     LOGGER.debug("New query ES page created {}", pageNumber);
     Client client = Utils.esClient();
     SearchRequestBuilder searchRequestBuilder = client.prepareSearch(PropertyManager.properties.getProperty("githubUserProfileEnricher.es.index"));
@@ -81,36 +87,27 @@ public class GitHubUserProfileEnricher {
 
     List<String> usernames = new ArrayList<>();
     response.getHits().forEach(hit -> usernames.add(hit.field("profiles.GITHUB.username").getValue()));
+
     ArrayNode arrayNode = JsonNodeFactory.instance.arrayNode();
     usernames.parallelStream().forEach(username -> {
-      try {
-        JsonNode profile = enrichUserProfile(username);
-        Optional.ofNullable(profile).ifPresent(arrayNode::add);
-        if (profile == null) {
-          failedUsernames.add(username);
-        }
-      }
-      catch (IOException e) {
-        LOGGER.error("ERROR", e);
+      JsonNode profile = enrichUserProfile(username);
+      Optional.ofNullable(profile).ifPresent(arrayNode::add);
+      if (profile == null) {
         failedUsernames.add(username);
       }
     });
-
-    LOGGER.debug(">>>>Start posting to api<<<<");
-    String enrichUserApi = PropertyManager.properties.getProperty("githubUserProfileEnricher.techlooper.api.enrichUser");
-    if (Utils.postJsonString(enrichUserApi, arrayNode.toString()) != 204) {
-      LOGGER.error("Error when posting json {} to api {}", arrayNode, enrichUserApi);
-    }
 
     Utils.writeToFile(arrayNode, String.format("%sgithub.post.p.%d.json", outputDirectory, pageNumber));
     if (failedUsernames.size() > 0) {
       Utils.writeToFile(failedUsernames, String.format("%sgithub.failed.p.%d.json", outputDirectory, pageNumber));
     }
 
+    executorService.execute(new PostApiJob(arrayNode));
+
     client.close();
   }
 
-  private static JsonNode enrichUserProfile(String username) throws IOException {
+  private static JsonNode enrichUserProfile(String username) {
     String queryUrl = String.format(queryUrlTemplate, username);
     final JsonNode[] profileNode = {null};
     LOGGER.debug("Do import.io query {}", queryUrl);
@@ -131,5 +128,27 @@ public class GitHubUserProfileEnricher {
       }
     });
     return profileNode[0];
+  }
+
+  private static class PostApiJob implements Runnable {
+
+    private JsonNode arrayNode;
+
+    public PostApiJob(JsonNode arrayNode) {
+      this.arrayNode = arrayNode;
+    }
+
+    public void run() {
+      LOGGER.debug(">>>>Start posting to api<<<<");
+      try {
+        if (Utils.postJsonString(enrichUserApi, arrayNode.toString()) != 204) {
+          LOGGER.error("Error when posting json {} to api {}", arrayNode, enrichUserApi);
+        }
+      }
+      catch (Exception e) {
+        LOGGER.error("ERROR", e);
+      }
+      LOGGER.debug(">>>>Done posting to api<<<<");
+    }
   }
 }

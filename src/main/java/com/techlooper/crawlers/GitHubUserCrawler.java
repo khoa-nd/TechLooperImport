@@ -54,6 +54,7 @@ public class GitHubUserCrawler {
     final String[] countries = {"vietnam"};
 
     FootPrint footPrint = Utils.readFootPrint(footPrintFilePath);
+
     ExecutorService executor = Executors.newFixedThreadPool(20);
 
     for (String country : countries) {
