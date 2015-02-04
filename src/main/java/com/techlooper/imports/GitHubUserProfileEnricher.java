@@ -125,9 +125,8 @@ public class GitHubUserProfileEnricher {
         refineImportIOFields.forEach(fieldName -> {
           JsonNode field = root.at("/" + fieldName);
           if (field.isTextual()) {
-            LOGGER.debug("Refine json {} ...", root.toString());
+            LOGGER.debug("Refine json ...");
             ((ObjectNode) root).putArray(fieldName).add(field.asText());
-            LOGGER.debug("...to {}", root.toString());
           }
         });
 //        ((ObjectNode) root).put("username", username);
@@ -150,6 +149,7 @@ public class GitHubUserProfileEnricher {
       try {
         if (Utils.postJsonString(enrichUserApi, arrayNode.toString()) != 204) {
           LOGGER.error("Error when posting json {} to api {}", arrayNode, enrichUserApi);
+          System.exit(1);
         }
       }
       catch (Exception e) {
