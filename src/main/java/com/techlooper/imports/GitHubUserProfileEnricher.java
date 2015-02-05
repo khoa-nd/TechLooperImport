@@ -168,7 +168,7 @@ public class GitHubUserProfileEnricher {
             ((ObjectNode) root).putArray(fieldName).add(field.asText());
           }
         });
-//        ((ObjectNode) root).put("username", username);
+        ((ObjectNode) root).put("username", username);
         profileNode[0] = root;
       }
     });
