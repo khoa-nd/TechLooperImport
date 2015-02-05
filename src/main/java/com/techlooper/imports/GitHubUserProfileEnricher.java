@@ -38,7 +38,7 @@ public class GitHubUserProfileEnricher {
 
   private static String outputDirectory = PropertyManager.getProperty("githubUserProfileEnricher.outputDirectory");
 
-  private static String footPrintFilePath = String.format("%sgithub.footprint.json", outputDirectory);
+  private static String footPrintFilePath = PropertyManager.getProperty("footPrintFile");//String.format("%sgithub.footprint.json", outputDirectory);
 
   private static String userId = PropertyManager.getProperty("githubUserProfileEnricher.userId");
 
@@ -50,7 +50,7 @@ public class GitHubUserProfileEnricher {
 
   private static String enrichUserApi = PropertyManager.getProperty("githubUserProfileEnricher.techlooper.api.enrichUser");
 
-  private static int maxPageSize = Integer.parseInt(PropertyManager.getProperty("maxPageSize"));
+  private static int pageSize = Integer.parseInt(PropertyManager.getProperty("pageSize"));
 
   private static int fixedThreadPool = Integer.parseInt(PropertyManager.getProperty("fixedThreadPool"));
 
@@ -70,10 +70,11 @@ public class GitHubUserProfileEnricher {
     SearchResponse response = searchRequestBuilder.setSearchType(SearchType.COUNT).execute().actionGet();
 
     long totalUsers = response.getHits().getTotalHits();
-    long maxPageNumber = (totalUsers % maxPageSize == 0) ? totalUsers / maxPageSize : totalUsers / maxPageSize + 1;
+    long maxPageNumber = (totalUsers % pageSize == 0) ? totalUsers / pageSize : totalUsers / pageSize + 1;
 
     ExecutorService executorService = Executors.newFixedThreadPool(fixedThreadPool);
-    for (int pageNumber = footPrint.getLastPageNumber(); pageNumber < maxPageNumber; pageNumber++) {
+    int lastPageNumber = footPrint.getLastPageNumber();
+    for (int pageNumber = lastPageNumber; pageNumber < maxPageNumber; pageNumber++) {
       try {
         doQuery(pageNumber, executorService);
         Utils.writeFootPrint(String.format("%sgithub.footprint.json", outputDirectory),
@@ -126,7 +127,7 @@ public class GitHubUserProfileEnricher {
 
     SearchResponse response = searchRequestBuilder.addField("profiles.GITHUB.username")
       .setSearchType(SearchType.DFS_QUERY_THEN_FETCH)
-      .setFrom(pageNumber * maxPageSize).setSize(maxPageSize).execute().actionGet();
+      .setFrom(pageNumber * pageSize).setSize(pageSize).execute().actionGet();
 
     List<String> usernames = new ArrayList<>();
     response.getHits().forEach(hit -> usernames.add(hit.field("profiles.GITHUB.username").getValue()));

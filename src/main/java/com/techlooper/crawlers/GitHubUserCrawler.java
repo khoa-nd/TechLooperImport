@@ -33,7 +33,7 @@ public class GitHubUserCrawler {
 
   private static String outputDirectory = PropertyManager.getProperty("githubUserCrawler.outputDirectory");
 
-  private static String footPrintFilePath = String.format("%sgithub.footprint.json", outputDirectory);
+  private static String footPrintFilePath = PropertyManager.getProperty("footPrintFile");//String.format("%sgithub.footprint.json", outputDirectory);
 
   private static String userId = PropertyManager.getProperty("githubUserCrawler.import.io.userId");
 
