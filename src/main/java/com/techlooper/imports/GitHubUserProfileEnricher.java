@@ -77,8 +77,7 @@ public class GitHubUserProfileEnricher {
     for (int pageNumber = lastPageNumber; pageNumber < maxPageNumber; pageNumber++) {
       try {
         doQuery(pageNumber, executorService);
-        Utils.writeFootPrint(String.format("%sgithub.footprint.json", outputDirectory),
-          FootPrint.FootPrintBuilder.footPrint().withLastPageNumber(pageNumber).build());
+        Utils.writeFootPrint(footPrintFilePath, FootPrint.FootPrintBuilder.footPrint().withLastPageNumber(pageNumber).build());
       }
       catch (Exception e) {
         LOGGER.error("ERROR", e);
