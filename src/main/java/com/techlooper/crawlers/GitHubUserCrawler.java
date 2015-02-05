@@ -144,8 +144,7 @@ public class GitHubUserCrawler {
         LOGGER.debug("  => Not min enough");
       }
 
-      Utils.writeFootPrint(footPrintFilePath,
-        FootPrint.FootPrintBuilder.footPrint(footPrint).withCrawler(country, fromTo).build());
+      Utils.writeFootPrint(footPrintFilePath, FootPrint.FootPrintBuilder.footPrint(footPrint).withCrawler(country, fromTo).build());
       fromTo = String.format("%s..%s", from.toString("yyyy-MM-dd"), to.toString("yyyy-MM-dd"));
     }
     while (!stop);
