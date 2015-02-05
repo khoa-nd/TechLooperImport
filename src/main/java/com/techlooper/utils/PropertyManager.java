@@ -35,7 +35,7 @@ public class PropertyManager {
       overrideProperties(PropertyManager.class.getClassLoader().getResource("override.properties").openStream());
     }
     catch (Exception e) {
-      LOGGER.error("Failed to override properties file", e);
+      LOGGER.debug("Failed to override properties file");
     }
   }
 
@@ -44,7 +44,7 @@ public class PropertyManager {
       properties.load(inputStream);
     }
     catch (Exception e) {
-      LOGGER.error("Failed to override properties file", e);
+      LOGGER.debug("Failed to override properties file");
     }
   }
 

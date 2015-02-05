@@ -27,9 +27,7 @@ public class GitHubUserCrawler {
 
 //  private static PoolingHttpClientConnectionManager clientConnectionManager = new PoolingHttpClientConnectionManager();
 
-  private static enum DIVISION {NOT, BINARY}
-
-  ;
+  private enum DIVISION {NOT, BINARY}
 
   private static String outputDirectory = PropertyManager.getProperty("githubUserCrawler.outputDirectory");
 
@@ -45,6 +43,8 @@ public class GitHubUserCrawler {
 
   private static String userConnectorId = PropertyManager.getProperty("githubUserCrawler.import.io.connector.github");
 
+  private static int fixedThreadPool = Integer.parseInt(PropertyManager.getProperty("fixedThreadPool"));
+
   public static void main(String[] args) throws IOException, InterruptedException, ParseException {
     Utils.sureDirectory(outputDirectory);
 //    final String[] countries = {"vietnam"x, "japan"x, "thailand"x, "singapore"x, "malaysia"x, "indonesia"x, "australia"x, "china"x, "india"x, "korea", "taiwan",
@@ -55,7 +55,7 @@ public class GitHubUserCrawler {
 
     FootPrint footPrint = Utils.readFootPrint(footPrintFilePath);
 
-    ExecutorService executor = Executors.newFixedThreadPool(20);
+    ExecutorService executor = Executors.newFixedThreadPool(fixedThreadPool);
 
     for (String country : countries) {
       doCountry(country, executor, footPrint);
