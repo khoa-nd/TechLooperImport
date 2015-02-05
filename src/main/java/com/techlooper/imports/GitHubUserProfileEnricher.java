@@ -67,7 +67,7 @@ public class GitHubUserProfileEnricher {
     SearchResponse response = searchRequestBuilder.setSearchType(SearchType.COUNT).execute().actionGet();
 
     long totalUsers = response.getHits().getTotalHits();
-    long maxPageNumber = (totalUsers % 10 == 0) ? totalUsers / 10 : totalUsers / 10 + 1;
+    long maxPageNumber = (totalUsers % 100 == 0) ? totalUsers / 100 : totalUsers / 100 + 1;
 
     ExecutorService executorService = Executors.newFixedThreadPool(Integer.valueOf(PropertyManager.getProperty("fixedThreadPool")));
     for (int pageNumber = footPrint.getLastPageNumber(); pageNumber < maxPageNumber; pageNumber++) {
@@ -120,7 +120,7 @@ public class GitHubUserProfileEnricher {
 
     SearchResponse response = searchRequestBuilder.addField("profiles.GITHUB.username")
       .setSearchType(SearchType.DFS_QUERY_THEN_FETCH)
-      .setFrom(pageNumber * 10).setSize(10).execute().actionGet();
+      .setFrom(pageNumber * 100).setSize(100).execute().actionGet();
 
     List<String> usernames = new ArrayList<>();
     response.getHits().forEach(hit -> usernames.add(hit.field("profiles.GITHUB.username").getValue()));
