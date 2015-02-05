@@ -98,14 +98,13 @@ public class GitHubUserProfileEnricher {
 
     executorService.execute(() -> {
       try {
-        Thread.sleep(2000);
         LOGGER.debug(">>>>Start posting to api<<<<");
         int respCode = Utils.postJsonString(enrichUserApi, jsonUsers.toString());
         if (respCode == HttpServletResponse.SC_NO_CONTENT) {
           Files.move(Paths.get(filename), Paths.get(String.format("%s.ok", filename)));
         }
         else {
-          LOGGER.error("Error {} when posting json to api. >_<", respCode);
+          LOGGER.error("Error {} when posting page {} to api. >_<", respCode, pageNumber);
         }
       }
       catch (Exception e) {
