@@ -31,19 +31,19 @@ public class GitHubUserCrawler {
 
   ;
 
-  private static String outputDirectory = PropertyManager.properties.getProperty("githubUserCrawler.outputDirectory");
+  private static String outputDirectory = PropertyManager.getProperty("githubUserCrawler.outputDirectory");
 
   private static String footPrintFilePath = String.format("%sgithub.footprint.json", outputDirectory);
 
-  private static String userId = PropertyManager.properties.getProperty("githubUserCrawler.import.io.userId");
+  private static String userId = PropertyManager.getProperty("githubUserCrawler.import.io.userId");
 
-  private static String apiKey = PropertyManager.properties.getProperty("githubUserCrawler.import.io.apiKey");
+  private static String apiKey = PropertyManager.getProperty("githubUserCrawler.import.io.apiKey");
 
-  private static String urlTemplate = PropertyManager.properties.getProperty("githubUserCrawler.user.searchTemplate");
+  private static String urlTemplate = PropertyManager.getProperty("githubUserCrawler.user.searchTemplate");
 
-  private static String totalUsersConnectorId = PropertyManager.properties.getProperty("githubUserCrawler.import.io.connector.github.totalUsers");
+  private static String totalUsersConnectorId = PropertyManager.getProperty("githubUserCrawler.import.io.connector.github.totalUsers");
 
-  private static String userConnectorId = PropertyManager.properties.getProperty("githubUserCrawler.import.io.connector.github");
+  private static String userConnectorId = PropertyManager.getProperty("githubUserCrawler.import.io.connector.github");
 
   public static void main(String[] args) throws IOException, InterruptedException, ParseException {
     Utils.sureDirectory(outputDirectory);
