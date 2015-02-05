@@ -20,9 +20,9 @@ public class GitHubUserImport {
 
   private static Logger LOGGER = LoggerFactory.getLogger(GitHubUserImport.class);
 
-  private static String inputDirectory = PropertyManager.properties.getProperty("githubUserImport.inputDirectory");
+  private static String inputDirectory = PropertyManager.getProperty("githubUserImport.inputDirectory");
 
-  private static String addUserApi = PropertyManager.properties.getProperty("githubUserImport.techlooper.api.addUser");
+  private static String addUserApi = PropertyManager.getProperty("githubUserImport.techlooper.api.addUser");
 
   public static void main(String[] args) throws IOException {
     LOGGER.info("Configuration info: \n  - InputDirectory: {}\n  - AddUserApi: {}", inputDirectory, addUserApi);

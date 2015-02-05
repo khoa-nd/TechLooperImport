@@ -14,6 +14,7 @@ import org.elasticsearch.client.Client;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -66,9 +67,9 @@ public class GitHubUserProfileEnricher {
     SearchResponse response = searchRequestBuilder.setSearchType(SearchType.COUNT).execute().actionGet();
 
     long totalUsers = response.getHits().getTotalHits();
-    long maxPageNumber = (totalUsers % 100 == 0) ? totalUsers / 100 : totalUsers / 100 + 1;
+    long maxPageNumber = (totalUsers % 10 == 0) ? totalUsers / 10 : totalUsers / 10 + 1;
 
-    ExecutorService executorService = Executors.newFixedThreadPool(20);
+    ExecutorService executorService = Executors.newFixedThreadPool(Integer.valueOf(PropertyManager.getProperty("fixedThreadPool")));
     for (int pageNumber = footPrint.getLastPageNumber(); pageNumber < maxPageNumber; pageNumber++) {
       try {
         doQuery(pageNumber, executorService);
@@ -95,22 +96,23 @@ public class GitHubUserProfileEnricher {
     File jsonFile = new File(filename);
     ArrayNode jsonUsers = jsonFile.exists() ? (ArrayNode) Utils.readJson(jsonFile) : crawlUsersProfile(pageNumber, executorService, filename);
 
-//    executorService.execute(() -> {
-//    try {
-//      Thread.sleep(2000);
-//      LOGGER.debug(">>>>Start posting to api<<<<");
-//      if (Utils.postJsonString(enrichUserApi, jsonUsers.toString()) != 204) {
-//        LOGGER.error("Error when posting json to api. >_<");
-//      }
-//      else {
-//        Files.move(Paths.get(filename), Paths.get(filename + ".ok"));
-//      }
-//    }
-//    catch (Exception e) {
-//      LOGGER.error("ERROR", e);
-//    }
-//    LOGGER.debug(">>>>Done posting to api<<<<");
-//    });
+    executorService.execute(() -> {
+      try {
+        Thread.sleep(2000);
+        LOGGER.debug(">>>>Start posting to api<<<<");
+        int respCode = Utils.postJsonString(enrichUserApi, jsonUsers.toString());
+        if (respCode == HttpServletResponse.SC_NO_CONTENT) {
+          Files.move(Paths.get(filename), Paths.get(String.format("%s.ok", filename)));
+        }
+        else {
+          LOGGER.error("Error {} when posting json to api. >_<", respCode);
+        }
+      }
+      catch (Exception e) {
+        LOGGER.error("ERROR", e);
+      }
+      LOGGER.debug(">>>>Done posting to api<<<<");
+    });
   }
 
   private static ArrayNode crawlUsersProfile(int pageNumber, ExecutorService executorService, String filename) throws InterruptedException, IOException {
@@ -119,7 +121,7 @@ public class GitHubUserProfileEnricher {
 
     SearchResponse response = searchRequestBuilder.addField("profiles.GITHUB.username")
       .setSearchType(SearchType.DFS_QUERY_THEN_FETCH)
-      .setFrom(pageNumber * 100).setSize(100).execute().actionGet();
+      .setFrom(pageNumber * 10).setSize(10).execute().actionGet();
 
     List<String> usernames = new ArrayList<>();
     response.getHits().forEach(hit -> usernames.add(hit.field("profiles.GITHUB.username").getValue()));
