@@ -24,7 +24,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -99,6 +98,9 @@ public class GitHubUserProfileEnricher {
 
     File jsonFile = new File(filename);
     ArrayNode jsonUsers = jsonFile.exists() ? (ArrayNode) Utils.readJson(jsonFile) : crawlUsersProfile(pageNumber, executorService, filename);
+    if (jsonUsers.size() == 0) {
+      return;
+    }
 
     executorService.execute(() -> {
       try {
@@ -139,15 +141,14 @@ public class GitHubUserProfileEnricher {
         JsonNode profile = future.get();
         Optional.ofNullable(profile).ifPresent(jsonUsers::add);
       }
-      catch (InterruptedException e) {
-        LOGGER.error("ERROR", e);
-      }
-      catch (ExecutionException e) {
+      catch (Exception e) {
         LOGGER.error("ERROR", e);
       }
     });
 
-    Utils.writeToFile(jsonUsers, filename);
+    if (jsonUsers.size() > 0) {
+      Utils.writeToFile(jsonUsers, filename);
+    }
 
     return jsonUsers;
   }
@@ -172,27 +173,4 @@ public class GitHubUserProfileEnricher {
     });
     return profileNode[0];
   }
-
-//  private static class PostApiJob implements Runnable {
-//
-//    private JsonNode arrayNode;
-//
-//    public PostApiJob(JsonNode arrayNode) {
-//      this.arrayNode = arrayNode;
-//    }
-//
-//    public void run() {
-//      LOGGER.debug(">>>>Start posting to api<<<<");
-//      try {
-//        if (Utils.postJsonString(enrichUserApi, arrayNode.toString()) != 204) {
-//          LOGGER.error("Error when posting json {} to api {}", arrayNode, enrichUserApi);
-//          System.exit(1);
-//        }
-//      }
-//      catch (Exception e) {
-//        LOGGER.error("ERROR", e);
-//      }
-//      LOGGER.debug(">>>>Done posting to api<<<<");
-//    }
-//  }
 }
