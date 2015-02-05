@@ -51,6 +51,10 @@ public class GitHubUserProfileEnricher {
 
   private static String enrichUserApi = PropertyManager.getProperty("githubUserProfileEnricher.techlooper.api.enrichUser");
 
+  private static int maxPageSize = Integer.parseInt(PropertyManager.getProperty("maxPageSize"));
+
+  private static int fixedThreadPool = Integer.parseInt(PropertyManager.getProperty("fixedThreadPool"));
+
   public static void main(String[] args) throws IOException {
     Utils.sureDirectory(outputDirectory);
 
@@ -67,9 +71,9 @@ public class GitHubUserProfileEnricher {
     SearchResponse response = searchRequestBuilder.setSearchType(SearchType.COUNT).execute().actionGet();
 
     long totalUsers = response.getHits().getTotalHits();
-    long maxPageNumber = (totalUsers % 100 == 0) ? totalUsers / 100 : totalUsers / 100 + 1;
+    long maxPageNumber = (totalUsers % maxPageSize == 0) ? totalUsers / maxPageSize : totalUsers / maxPageSize + 1;
 
-    ExecutorService executorService = Executors.newFixedThreadPool(Integer.valueOf(PropertyManager.getProperty("fixedThreadPool")));
+    ExecutorService executorService = Executors.newFixedThreadPool(fixedThreadPool);
     for (int pageNumber = footPrint.getLastPageNumber(); pageNumber < maxPageNumber; pageNumber++) {
       try {
         doQuery(pageNumber, executorService);
@@ -120,7 +124,7 @@ public class GitHubUserProfileEnricher {
 
     SearchResponse response = searchRequestBuilder.addField("profiles.GITHUB.username")
       .setSearchType(SearchType.DFS_QUERY_THEN_FETCH)
-      .setFrom(pageNumber * 100).setSize(100).execute().actionGet();
+      .setFrom(pageNumber * maxPageSize).setSize(maxPageSize).execute().actionGet();
 
     List<String> usernames = new ArrayList<>();
     response.getHits().forEach(hit -> usernames.add(hit.field("profiles.GITHUB.username").getValue()));
