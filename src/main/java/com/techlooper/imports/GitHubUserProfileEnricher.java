@@ -50,6 +50,8 @@ public class GitHubUserProfileEnricher {
 
   private static String enrichUserApi = PropertyManager.getProperty("githubUserProfileEnricher.techlooper.api.enrichUser");
 
+  private static String esIndex = PropertyManager.getProperty("githubUserProfileEnricher.es.index");
+
   private static int pageSize = Integer.parseInt(PropertyManager.getProperty("pageSize"));
 
   private static int fixedThreadPool = Integer.parseInt(PropertyManager.getProperty("fixedThreadPool"));
@@ -66,7 +68,7 @@ public class GitHubUserProfileEnricher {
   private static void queryES(FootPrint footPrint) {
     Client client = Utils.esClient();
 
-    SearchRequestBuilder searchRequestBuilder = client.prepareSearch(PropertyManager.properties.getProperty("githubUserProfileEnricher.es.index"));
+    SearchRequestBuilder searchRequestBuilder = client.prepareSearch(esIndex);
     SearchResponse response = searchRequestBuilder.setSearchType(SearchType.COUNT).execute().actionGet();
 
     long totalUsers = response.getHits().getTotalHits();
