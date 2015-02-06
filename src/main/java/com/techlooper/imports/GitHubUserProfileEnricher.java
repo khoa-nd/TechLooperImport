@@ -11,6 +11,10 @@ import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.client.Client;
+import org.elasticsearch.index.query.FilterBuilder;
+import org.elasticsearch.index.query.FilterBuilders;
+import org.elasticsearch.index.query.NestedFilterBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,7 +62,12 @@ public class GitHubUserProfileEnricher {
 
   private static boolean retry = Boolean.parseBoolean(PropertyManager.getProperty("retry"));
 
+  private static boolean filterUsersHasntDescription = Boolean.parseBoolean(PropertyManager.getProperty("githubUserProfileEnricher.filterUsersHasntDescription"));
+
   private static String iioFailsPath = PropertyManager.getProperty("iio.fails");
+
+  private static FilterBuilder userHasntDescriptionFilterBuilder = FilterBuilders.nestedFilter("profiles",
+    FilterBuilders.notFilter(FilterBuilders.existsFilter("description"))).cache(true);
 
   public static void main(String[] args) throws IOException {
     Utils.sureDirectory(outputDirectory);
@@ -77,8 +86,12 @@ public class GitHubUserProfileEnricher {
 
   private static void queryES(FootPrint footPrint, ExecutorService executorService) throws IOException {
     Client client = Utils.esClient();
+    SearchRequestBuilder searchRequestBuilder = client.prepareSearch(esIndex).setSearchType(SearchType.COUNT);
 
-    SearchRequestBuilder searchRequestBuilder = client.prepareSearch(esIndex);
+    if (filterUsersHasntDescription) {
+      searchRequestBuilder.setPostFilter(userHasntDescriptionFilterBuilder);
+    }
+
     SearchResponse response = searchRequestBuilder.setSearchType(SearchType.COUNT).execute().actionGet();
 
     long totalUsers = response.getHits().getTotalHits();
@@ -183,11 +196,13 @@ public class GitHubUserProfileEnricher {
 
   private static ArrayNode crawlUsersProfile(int pageNumber, ExecutorService executorService, String filename) throws InterruptedException, IOException {
     Client client = Utils.esClient();
-    SearchRequestBuilder searchRequestBuilder = client.prepareSearch(PropertyManager.properties.getProperty("githubUserProfileEnricher.es.index"));
+    SearchRequestBuilder searchRequestBuilder = client.prepareSearch(esIndex).setSearchType(SearchType.DFS_QUERY_THEN_FETCH)
+      .setFrom(pageNumber * pageSize).setSize(pageSize).addField("profiles.GITHUB.username");
+    if (filterUsersHasntDescription) {
+      searchRequestBuilder.setPostFilter(userHasntDescriptionFilterBuilder);
+    }
 
-    SearchResponse response = searchRequestBuilder.addField("profiles.GITHUB.username")
-                                .setSearchType(SearchType.DFS_QUERY_THEN_FETCH)
-                                .setFrom(pageNumber * pageSize).setSize(pageSize).execute().actionGet();
+    SearchResponse response = searchRequestBuilder.execute().actionGet();
 
     List<String> usernames = new ArrayList<>();
     response.getHits().forEach(hit -> usernames.add(hit.field("profiles.GITHUB.username").getValue()));
