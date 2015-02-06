@@ -103,7 +103,7 @@ public class Utils {
           LOGGER.debug("Empty result, query {}", queryUrl);
         }
 
-        LOGGER.debug("OK => Consuming {}", root);
+        LOGGER.debug("OK => Consuming query {}...", queryUrl);
         consumer.accept(root);
       }
     }
