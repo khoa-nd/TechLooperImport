@@ -94,6 +94,7 @@ public class GitHubUserCrawler {
 
     String fromTo = Optional.ofNullable(footPrint.getCrawlers().get(country))
       .orElse(String.format("2007-01-01..%d-12-31", currentYear));
+    fromTo = fromTo.split("\\..")[0] + ".." + String.format("%d-12-31", currentYear);
 
     DIVISION div = DIVISION.NOT;
     DateTimeFormatter dateTimeFormatter = DateTimeFormat.forPattern("yyyy-MM-dd").withLocale(Locale.US);
