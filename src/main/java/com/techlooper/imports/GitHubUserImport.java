@@ -4,6 +4,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.techlooper.utils.PropertyManager;
 import com.techlooper.utils.Utils;
+import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.search.SearchType;
+import org.elasticsearch.client.Client;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,6 +32,8 @@ public class GitHubUserImport {
   private static String addUserApi = PropertyManager.getProperty("githubUserImport.techlooper.api.addUser");
 
   private static int fixedThreadPool = Integer.parseInt(PropertyManager.getProperty("fixedThreadPool"));
+
+  private static String esIndex = PropertyManager.getProperty("githubUserImport.es.index");
 
   public static void main(String[] args) throws IOException {
     ExecutorService executorService = Executors.newFixedThreadPool(fixedThreadPool);
@@ -81,5 +86,19 @@ public class GitHubUserImport {
     catch (Exception e) {
       LOGGER.error("Error when proccessing file", e);
     }
+  }
+
+  private static boolean exist(String username) {
+    Client client = Utils.esClient();
+
+//    QUery
+
+    SearchResponse response = client.prepareSearch(esIndex).setSearchType(SearchType.COUNT)
+                                .execute().actionGet();
+
+
+    client.close();
+
+    return false;
   }
 }
