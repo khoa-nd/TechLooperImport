@@ -43,6 +43,8 @@ public class GitHubUserCrawler {
 
   private static String userConnectorId = PropertyManager.getProperty("githubUserCrawler.import.io.connector.github");
 
+  private static int fromYear = Integer.parseInt(PropertyManager.getProperty("githubUserCrawler.fromYear"));
+
   private static int fixedThreadPool = Integer.parseInt(PropertyManager.getProperty("fixedThreadPool"));
 
   public static void main(String[] args) throws IOException, InterruptedException, ParseException {
