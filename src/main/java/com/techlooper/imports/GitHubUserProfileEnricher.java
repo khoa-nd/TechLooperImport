@@ -224,9 +224,9 @@ public class GitHubUserProfileEnricher {
         refineImportIOFields.forEach(fieldName -> {
           JsonNode field = root.at("/" + fieldName);
           if (field.isTextual()) {
-            LOGGER.debug("Refine field {} ...", fieldName);
+            LOGGER.debug("Refine field [{}]...", fieldName);
             ((ObjectNode) root).putArray(fieldName).add(field.asText());
-            LOGGER.debug("...done refine field {}", fieldName);
+            LOGGER.debug("...done refine field [{}]", fieldName);
           }
         });
         ((ObjectNode) root).put("username", username);
