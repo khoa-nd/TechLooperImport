@@ -29,6 +29,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 /**
@@ -84,13 +85,12 @@ public class Utils {
         JsonNode root = Utils.readIIOResult(content);
         if (!root.isArray()) {
           LOGGER.debug("Error result => query: {}", queryUrl);
-          if ("I/O Error getting page.".equals(Utils.readJson(content).at("/error").asText())) {
-            LOGGER.error("I/O Error getting page. => Try again query {}", queryUrl);
-          }
-          else {
-            LOGGER.error("Not I/O Error getting page. => Break loop query {}", queryUrl);
+          String errorText = Optional.ofNullable(Utils.readJson(content).at("/error").asText()).orElse("");
+          if (errorText.contains("HTTP 404")) {
+            LOGGER.error("HTTP 404 => Break loop query {}", queryUrl);
             break;
           }
+          LOGGER.error("I/O Error getting page. => Try again query {}", queryUrl);
           continue;
         }
         tryAgain = false;
