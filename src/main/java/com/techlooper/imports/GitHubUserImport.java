@@ -77,8 +77,8 @@ public class GitHubUserImport {
             LOGGER.error("Error calling to api, error code: {} (>_<)", rspCode);
           }
         }
-        catch (IOException e) {
-          LOGGER.error("Error", e);
+        catch (Exception e) {
+          LOGGER.error("Error file {}, ex: ", filePath, e);
         }
         LOGGER.debug(">>>>Done posting to api<<<<");
       });
