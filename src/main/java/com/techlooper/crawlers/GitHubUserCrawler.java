@@ -61,7 +61,7 @@ public class GitHubUserCrawler {
       doCountry(country, executor, footPrint);
     }
 
-    executor.shutdown();
+//    executor.shutdown();
     LOGGER.debug("DONE DONE DONE!!!!!");
   }
 

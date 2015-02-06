@@ -31,9 +31,9 @@ public class GitHubUserImport {
 
   private static String addUserApi = PropertyManager.getProperty("githubUserImport.techlooper.api.addUser");
 
-  private static int fixedThreadPool = Integer.parseInt(PropertyManager.getProperty("fixedThreadPool"));
-
   private static String esIndex = PropertyManager.getProperty("githubUserImport.es.index");
+
+  private static int fixedThreadPool = Integer.parseInt(PropertyManager.getProperty("fixedThreadPool"));
 
   public static void main(String[] args) throws IOException {
     ExecutorService executorService = Executors.newFixedThreadPool(fixedThreadPool);
@@ -42,7 +42,7 @@ public class GitHubUserImport {
         sendFile(filePath, executorService);
       }
     });
-    executorService.shutdown();
+//    executorService.shutdown();
     LOGGER.debug("DONE DONE DONE!!!!!");
   }
 

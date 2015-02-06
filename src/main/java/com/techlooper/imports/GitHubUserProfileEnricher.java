@@ -17,9 +17,8 @@ import org.slf4j.LoggerFactory;
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.FileVisitOption;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -53,27 +52,29 @@ public class GitHubUserProfileEnricher {
 
   private static String esIndex = PropertyManager.getProperty("githubUserProfileEnricher.es.index");
 
-  private static int pageSize = Integer.parseInt(PropertyManager.getProperty("pageSize"));
-
   private static int fixedThreadPool = Integer.parseInt(PropertyManager.getProperty("fixedThreadPool"));
 
-  private static boolean continuous = Boolean.parseBoolean(PropertyManager.getProperty("continuous"));
+  private static int pageSize = Integer.parseInt(PropertyManager.getProperty("pageSize"));
+
+  private static boolean retry = Boolean.parseBoolean(PropertyManager.getProperty("retry"));
+
+  private static String iioFailsPath = PropertyManager.getProperty("iio.fails");
 
   public static void main(String[] args) throws IOException {
     Utils.sureDirectory(outputDirectory);
-
-    FootPrint footPrint = Utils.readFootPrint(footPrintFilePath);
-    queryES(footPrint);
+    ExecutorService executorService = Executors.newFixedThreadPool(fixedThreadPool);
+    if (retry) {
+      doRetry(executorService);
+    }
+    else {
+      FootPrint footPrint = Utils.readFootPrint(footPrintFilePath);
+      queryES(footPrint, executorService);
+    }
 
     LOGGER.debug("DONE DONE DONE!!!!!");
   }
 
-  private static void queryES(FootPrint footPrint) throws IOException {
-    if (continuous) {
-      doContinuous();
-      return;
-    }
-
+  private static void queryES(FootPrint footPrint, ExecutorService executorService) throws IOException {
     Client client = Utils.esClient();
 
     SearchRequestBuilder searchRequestBuilder = client.prepareSearch(esIndex);
@@ -82,7 +83,6 @@ public class GitHubUserProfileEnricher {
     long totalUsers = response.getHits().getTotalHits();
     long maxPageNumber = (totalUsers % pageSize == 0) ? totalUsers / pageSize : totalUsers / pageSize + 1;
 
-    ExecutorService executorService = Executors.newFixedThreadPool(fixedThreadPool);
     int lastPageNumber = footPrint.getLastPageNumber();
     for (int pageNumber = lastPageNumber; pageNumber < maxPageNumber; pageNumber++) {
       try {
@@ -93,49 +93,52 @@ public class GitHubUserProfileEnricher {
         LOGGER.error("ERROR", e);
       }
     }
-    executorService.shutdown();
 
     client.close();
   }
 
-  private static void doContinuous() throws IOException {
-    ExecutorService executorService = Executors.newFixedThreadPool(fixedThreadPool);
-    Files.walk(Paths.get(outputDirectory), FileVisitOption.FOLLOW_LINKS).filter(path -> path.toString().endsWith(".json")).parallel()
-      .map(filePath -> new File(filePath.toString())).forEach(jsonFile -> {
-      if (jsonFile.exists()) {
-        asyncPostFile(executorService, jsonFile);
-      }
-    });
-    executorService.shutdown();
+  private static void doRetry(ExecutorService executorService) throws IOException {
+    doJsonFiles(executorService);
+    doIIOFailsFiles(executorService);
   }
 
-  private static void asyncPostFile(ExecutorService executorService, File jsonFile) {
-    try {
-      String jsonFilePath = jsonFile.getPath();
-      LOGGER.debug("Posting file {}", jsonFilePath);
-      ArrayNode jsonUsers = (ArrayNode) Utils.readJson(jsonFile);
-      if (jsonUsers.size() > 0) {
-        executorService.execute(() -> {
-          try {
-            LOGGER.debug(">>>>Start posting to api<<<<");
-            int respCode = Utils.postJsonString(enrichUserApi, jsonUsers.toString());
-            if (respCode == HttpServletResponse.SC_NO_CONTENT) {
-              Files.move(Paths.get(jsonFilePath), Paths.get(String.format("%s.ok", jsonFilePath)));
-            }
-            else {
-              LOGGER.error("Error {} when posting file {} to api. >_<", jsonFilePath, respCode);
-            }
-          }
-          catch (Exception e) {
-            LOGGER.error("ERROR", e);
-          }
-          LOGGER.debug(">>>>Done posting to api<<<<");
-        });
+  private static void doIIOFailsFiles(ExecutorService executorService) throws IOException {
+    ArrayNode jsonUsers = JsonNodeFactory.instance.arrayNode();
+    List<String> queries = Files.readAllLines(Paths.get(iioFailsPath));
+    List<String> successQueries = new ArrayList<>();
+    queries.forEach(queryUrl -> {
+      LOGGER.debug("Retry query {}", queryUrl);
+      String username = iioFailsPath.substring(iioFailsPath.lastIndexOf("/") + 1, iioFailsPath.length());
+      JsonNode usProfile = enrichUserProfile(username);
+      jsonUsers.add(usProfile);
+      successQueries.add(queryUrl);
+    });
+    Files.write(Paths.get(iioFailsPath + ".ok"), successQueries, StandardCharsets.UTF_8, StandardOpenOption.CREATE);
+
+    Path postFile = Paths.get(iioFailsPath + ".json");
+    Files.write(postFile, Arrays.asList(jsonUsers.toString()), StandardCharsets.UTF_8, StandardOpenOption.CREATE);
+    postUsers2API(executorService, postFile.toString(), jsonUsers);
+  }
+
+  private static void doJsonFiles(ExecutorService executorService) throws IOException {
+    Files.walk(Paths.get(outputDirectory), FileVisitOption.FOLLOW_LINKS).filter(path -> path.toString().endsWith(".json"))
+      .map(filePath -> new File(filePath.toString())).forEach(jsonFile -> {
+      if (Files.isRegularFile(Paths.get(jsonFile.getPath()))) {
+        try {
+          asyncPostFile(executorService, jsonFile);
+        }
+        catch (Exception e) {
+          LOGGER.error("Error", e);
+        }
       }
-    }
-    catch (Exception e) {
-      LOGGER.error("ERROR", e);
-    }
+    });
+  }
+
+  private static void asyncPostFile(ExecutorService executorService, File jsonFile) throws IOException {
+    String jsonFilePath = jsonFile.getPath();
+    LOGGER.debug("Posting file {}", jsonFilePath);
+    ArrayNode jsonUsers = (ArrayNode) Utils.readJson(jsonFile);
+    postUsers2API(executorService, jsonFilePath, jsonUsers);
   }
 
   private static void doQuery(int pageNumber, ExecutorService executorService) throws IOException, InterruptedException {
@@ -152,6 +155,13 @@ public class GitHubUserProfileEnricher {
       return;
     }
 
+    postUsers2API(executorService, filename, jsonUsers);
+  }
+
+  private static void postUsers2API(ExecutorService executorService, String filename, ArrayNode jsonUsers) {
+    if (jsonUsers.size() == 0) {
+      return;
+    }
     executorService.execute(() -> {
       try {
         LOGGER.debug(">>>>Start posting to api<<<<");
@@ -160,7 +170,7 @@ public class GitHubUserProfileEnricher {
           Files.move(Paths.get(filename), Paths.get(String.format("%s.ok", filename)));
         }
         else {
-          LOGGER.error("Error {} when posting page {} to api. >_<", respCode, pageNumber);
+          LOGGER.error("Error {} when posting users to api. >_<", respCode);
         }
       }
       catch (Exception e) {
