@@ -42,7 +42,7 @@ public class GitHubUserImport {
         sendFile(filePath, executorService);
       }
     });
-//    executorService.shutdown();
+    executorService.shutdown();
     LOGGER.debug("DONE DONE DONE!!!!!");
   }
 

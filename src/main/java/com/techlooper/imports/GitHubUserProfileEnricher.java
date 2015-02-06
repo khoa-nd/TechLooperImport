@@ -70,6 +70,7 @@ public class GitHubUserProfileEnricher {
       FootPrint footPrint = Utils.readFootPrint(footPrintFilePath);
       queryES(footPrint, executorService);
     }
+    executorService.shutdown();
 
     LOGGER.debug("DONE DONE DONE!!!!!");
   }
@@ -108,7 +109,7 @@ public class GitHubUserProfileEnricher {
     List<String> successQueries = new ArrayList<>();
     queries.forEach(queryUrl -> {
       LOGGER.debug("Retry query {}", queryUrl);
-      String username = iioFailsPath.substring(iioFailsPath.lastIndexOf("/") + 1, iioFailsPath.length());
+      String username = queryUrl.substring(queryUrl.lastIndexOf("/") + 1, queryUrl.length());
       JsonNode usProfile = enrichUserProfile(username);
       jsonUsers.add(usProfile);
       successQueries.add(queryUrl);
@@ -223,9 +224,9 @@ public class GitHubUserProfileEnricher {
         refineImportIOFields.forEach(fieldName -> {
           JsonNode field = root.at("/" + fieldName);
           if (field.isTextual()) {
-            LOGGER.debug("Refine json ...");
+            LOGGER.debug("Refine field {} ...", fieldName);
             ((ObjectNode) root).putArray(fieldName).add(field.asText());
-            LOGGER.debug("...done refine json ...");
+            LOGGER.debug("...done refine field {}", fieldName);
           }
         });
         ((ObjectNode) root).put("username", username);
