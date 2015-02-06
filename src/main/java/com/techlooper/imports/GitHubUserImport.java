@@ -84,7 +84,7 @@ public class GitHubUserImport {
       });
     }
     catch (Exception e) {
-      LOGGER.error("Error when proccessing file", e);
+      LOGGER.error("Error when proccessing file {}, ex: ", filePath, e);
     }
   }
 
