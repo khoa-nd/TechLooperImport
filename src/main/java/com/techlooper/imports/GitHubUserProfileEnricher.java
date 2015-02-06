@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -56,6 +57,8 @@ public class GitHubUserProfileEnricher {
 
   private static int fixedThreadPool = Integer.parseInt(PropertyManager.getProperty("fixedThreadPool"));
 
+  private static boolean continuous = Boolean.parseBoolean(PropertyManager.getProperty("continuous"));
+
   public static void main(String[] args) throws IOException {
     Utils.sureDirectory(outputDirectory);
 
@@ -65,7 +68,12 @@ public class GitHubUserProfileEnricher {
     LOGGER.debug("DONE DONE DONE!!!!!");
   }
 
-  private static void queryES(FootPrint footPrint) {
+  private static void queryES(FootPrint footPrint) throws IOException {
+    if (continuous) {
+      doContinuous();
+      return;
+    }
+
     Client client = Utils.esClient();
 
     SearchRequestBuilder searchRequestBuilder = client.prepareSearch(esIndex);
@@ -88,6 +96,46 @@ public class GitHubUserProfileEnricher {
     executorService.shutdown();
 
     client.close();
+  }
+
+  private static void doContinuous() throws IOException {
+    ExecutorService executorService = Executors.newFixedThreadPool(fixedThreadPool);
+    Files.walk(Paths.get(outputDirectory), FileVisitOption.FOLLOW_LINKS).filter(path -> path.toString().endsWith(".json")).parallel()
+      .map(filePath -> new File(filePath.toString())).forEach(jsonFile -> {
+      if (jsonFile.exists()) {
+        asyncPostFile(executorService, jsonFile);
+      }
+    });
+    executorService.shutdown();
+  }
+
+  private static void asyncPostFile(ExecutorService executorService, File jsonFile) {
+    try {
+      String jsonFilePath = jsonFile.getPath();
+      LOGGER.debug("Posting file {}", jsonFilePath);
+      ArrayNode jsonUsers = (ArrayNode) Utils.readJson(jsonFile);
+      if (jsonUsers.size() > 0) {
+        executorService.execute(() -> {
+          try {
+            LOGGER.debug(">>>>Start posting to api<<<<");
+            int respCode = Utils.postJsonString(enrichUserApi, jsonUsers.toString());
+            if (respCode == HttpServletResponse.SC_NO_CONTENT) {
+              Files.move(Paths.get(jsonFilePath), Paths.get(String.format("%s.ok", jsonFilePath)));
+            }
+            else {
+              LOGGER.error("Error {} when posting file {} to api. >_<", jsonFilePath, respCode);
+            }
+          }
+          catch (Exception e) {
+            LOGGER.error("ERROR", e);
+          }
+          LOGGER.debug(">>>>Done posting to api<<<<");
+        });
+      }
+    }
+    catch (Exception e) {
+      LOGGER.error("ERROR", e);
+    }
   }
 
   private static void doQuery(int pageNumber, ExecutorService executorService) throws IOException, InterruptedException {
@@ -127,8 +175,8 @@ public class GitHubUserProfileEnricher {
     SearchRequestBuilder searchRequestBuilder = client.prepareSearch(PropertyManager.properties.getProperty("githubUserProfileEnricher.es.index"));
 
     SearchResponse response = searchRequestBuilder.addField("profiles.GITHUB.username")
-      .setSearchType(SearchType.DFS_QUERY_THEN_FETCH)
-      .setFrom(pageNumber * pageSize).setSize(pageSize).execute().actionGet();
+                                .setSearchType(SearchType.DFS_QUERY_THEN_FETCH)
+                                .setFrom(pageNumber * pageSize).setSize(pageSize).execute().actionGet();
 
     List<String> usernames = new ArrayList<>();
     response.getHits().forEach(hit -> usernames.add(hit.field("profiles.GITHUB.username").getValue()));
@@ -167,6 +215,7 @@ public class GitHubUserProfileEnricher {
           if (field.isTextual()) {
             LOGGER.debug("Refine json ...");
             ((ObjectNode) root).putArray(fieldName).add(field.asText());
+            LOGGER.debug("...done refine json ...");
           }
         });
         ((ObjectNode) root).put("username", username);
