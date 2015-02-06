@@ -1,5 +1,6 @@
 {
     "comment": {
+        "moreInfo" : "https://api.stackexchange.com/docs/search",
         "header": "We can search on Stackoverflow by name like below url :",
         "urlExample": "/2.2/users?order=desc&sort=reputation&inname=William Jockusch&site=stackoverflow",
         "responseSample": {
