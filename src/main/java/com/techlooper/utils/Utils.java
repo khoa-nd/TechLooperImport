@@ -103,21 +103,26 @@ public class Utils {
           LOGGER.debug("Empty result, query {}", queryUrl);
         }
 
-        LOGGER.debug("OK => Consuming {}", root);
+        LOGGER.debug("OK => Consuming query {}...", queryUrl);
         consumer.accept(root);
       }
     }
     catch (Exception e) {
       try {
-        if (new File(iioFailsPath).exists()) {
+        File iioFailFile = new File(iioFailsPath);
+        if (iioFailFile.exists()) {
           Files.write(Paths.get(iioFailsPath), Arrays.asList(queryUrl), StandardCharsets.UTF_8, StandardOpenOption.APPEND);
         }
         else {
+          File parentFile = iioFailFile.getParentFile();
+          if (!parentFile.exists()) {
+            parentFile.mkdirs();
+          }
           Files.write(Paths.get(iioFailsPath), Arrays.asList(queryUrl), StandardCharsets.UTF_8, StandardOpenOption.CREATE);
         }
       }
       catch (IOException ex) {
-
+        LOGGER.error("Can not write to fail file {}", iioFailsPath);
       }
       LOGGER.error("Can not do crawler {}", queryUrl, e);
     }
