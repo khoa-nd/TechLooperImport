@@ -28,6 +28,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -38,6 +40,8 @@ import java.util.function.Consumer;
 public class Utils {
 
   private static Logger LOGGER = LoggerFactory.getLogger(Utils.class);
+
+  private static String iioFailsPath = PropertyManager.getProperty("iio.fails");
 
   public static JsonNode readJson(File file) throws IOException {
     return new ObjectMapper().readTree(file);
@@ -104,7 +108,18 @@ public class Utils {
       }
     }
     catch (Exception e) {
-      LOGGER.error("Can not do crawler", e);
+      try {
+        if (new File(iioFailsPath).exists()) {
+          Files.write(Paths.get(iioFailsPath), Arrays.asList(queryUrl), StandardCharsets.UTF_8, StandardOpenOption.APPEND);
+        }
+        else {
+          Files.write(Paths.get(iioFailsPath), Arrays.asList(queryUrl), StandardCharsets.UTF_8, StandardOpenOption.CREATE);
+        }
+      }
+      catch (IOException ex) {
+
+      }
+      LOGGER.error("Can not do crawler {}", queryUrl, e);
     }
   }
 
