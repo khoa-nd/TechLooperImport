@@ -1,8 +1,8 @@
 package com.techlooper.crawlers;
 
+import com.techlooper.pojo.FootPrint;
 import com.techlooper.utils.PropertyManager;
 import com.techlooper.utils.Utils;
-import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.text.ParseException;
 import java.util.Calendar;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -26,19 +27,23 @@ public class GitHubUserCrawler {
 
 //  private static PoolingHttpClientConnectionManager clientConnectionManager = new PoolingHttpClientConnectionManager();
 
-  private static enum DIVISION {NOT, BINARY};
+  private enum DIVISION {NOT, BINARY}
 
-  private static String outputDirectory = PropertyManager.properties.getProperty("githubUserCrawler.outputDirectory");
+  private static String outputDirectory = PropertyManager.getProperty("githubUserCrawler.outputDirectory");
 
-  private static String userId = PropertyManager.properties.getProperty("githubUserCrawler.import.io.userId");
+  private static String footPrintFilePath = PropertyManager.getProperty("footPrintFile");//String.format("%sgithub.footprint.json", outputDirectory);
 
-  private static String apiKey = PropertyManager.properties.getProperty("githubUserCrawler.import.io.apiKey");
+  private static String userId = PropertyManager.getProperty("githubUserCrawler.import.io.userId");
 
-  private static String urlTemplate = PropertyManager.properties.getProperty("githubUserCrawler.user.searchTemplate");
+  private static String apiKey = PropertyManager.getProperty("githubUserCrawler.import.io.apiKey");
 
-  private static String totalUsersConnectorId = PropertyManager.properties.getProperty("githubUserCrawler.import.io.connector.github.totalUsers");
+  private static String urlTemplate = PropertyManager.getProperty("githubUserCrawler.user.searchTemplate");
 
-  private static String userConnectorId = PropertyManager.properties.getProperty("githubUserCrawler.import.io.connector.github");
+  private static String totalUsersConnectorId = PropertyManager.getProperty("githubUserCrawler.import.io.connector.github.totalUsers");
+
+  private static String userConnectorId = PropertyManager.getProperty("githubUserCrawler.import.io.connector.github");
+
+  private static int fixedThreadPool = Integer.parseInt(PropertyManager.getProperty("fixedThreadPool"));
 
   public static void main(String[] args) throws IOException, InterruptedException, ParseException {
     Utils.sureDirectory(outputDirectory);
@@ -46,13 +51,14 @@ public class GitHubUserCrawler {
 //      "spain", "ukraine", "poland", "russia", "bulgaria", "turkey", "greece", "serbia", "romania", "belarus", "lithuania", "estonia",
 //      "italy", "portugal", "colombia", "brazil", "chile", "argentina", "venezuela", "bolivia", "mexico"};
 
+    final String[] countries = {"vietnam"};
 
-    final String[] countries = {"india"};
+    FootPrint footPrint = Utils.readFootPrint(footPrintFilePath);
 
-    ExecutorService executor = Executors.newFixedThreadPool(20);
+    ExecutorService executor = Executors.newFixedThreadPool(fixedThreadPool);
 
     for (String country : countries) {
-      doCountry(country, executor);
+      doCountry(country, executor, footPrint);
     }
 
     executor.shutdown();
@@ -82,10 +88,13 @@ public class GitHubUserCrawler {
     return right;
   }
 
-  private static void doCountry(String country, ExecutorService executor) throws IOException, InterruptedException, ParseException {
+  private static void doCountry(String country, ExecutorService executor, FootPrint footPrint) throws IOException, InterruptedException, ParseException {
     int currentYear = Calendar.getInstance(Locale.US).get(Calendar.YEAR);
     boolean stop = false;
-    String fromTo = String.format("2007-01-01..%d-12-31", currentYear);
+
+    String fromTo = Optional.ofNullable(footPrint.getCrawlers().get(country))
+      .orElse(String.format("2007-01-01..%d-12-31", currentYear));
+
     DIVISION div = DIVISION.NOT;
     DateTimeFormatter dateTimeFormatter = DateTimeFormat.forPattern("yyyy-MM-dd").withLocale(Locale.US);
 
@@ -135,6 +144,7 @@ public class GitHubUserCrawler {
         LOGGER.debug("  => Not min enough");
       }
 
+      Utils.writeFootPrint(footPrintFilePath, FootPrint.FootPrintBuilder.footPrint(footPrint).withCrawler(country, fromTo).build());
       fromTo = String.format("%s..%s", from.toString("yyyy-MM-dd"), to.toString("yyyy-MM-dd"));
     }
     while (!stop);

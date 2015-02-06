@@ -29,6 +29,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 /**
@@ -38,7 +39,25 @@ public class Utils {
 
   private static Logger LOGGER = LoggerFactory.getLogger(Utils.class);
 
-  public static FootPrint loadFootPrint(String filePath) {
+  public static JsonNode readJson(File file) throws IOException {
+    return new ObjectMapper().readTree(file);
+  }
+
+//  public static FootPrint[] loadFootPrints(String filePath) {
+//    File file = new File(filePath);
+//    if (file.exists()) {
+//      try {
+//        return new ObjectMapper().readValue(file, FootPrint[].class);
+//      }
+//      catch (Exception e) {
+//        LOGGER.error("ERROR", e);
+//      }
+//    }
+//    return new FootPrint[]{};
+//  }
+
+  public static FootPrint readFootPrint(String filePath) {
+    LOGGER.debug("Read foot-print at {}", filePath);
     File file = new File(filePath);
     if (file.exists()) {
       try {
@@ -51,7 +70,8 @@ public class Utils {
     return FootPrint.FootPrintBuilder.footPrint().build();
   }
 
-  public static void saveFootPrint(String filePath, FootPrint footPrint) throws IOException {
+  public static void writeFootPrint(String filePath, FootPrint footPrint) throws IOException {
+    LOGGER.debug("Save foot-print to {}", filePath);
     new ObjectMapper().writeValue(new File(filePath), footPrint);
   }
 
@@ -65,13 +85,12 @@ public class Utils {
         JsonNode root = Utils.readIIOResult(content);
         if (!root.isArray()) {
           LOGGER.debug("Error result => query: {}", queryUrl);
-          if ("I/O Error getting page.".equals(Utils.readJson(content).at("/error").asText())) {
-            LOGGER.error("I/O Error getting page. => Try again query {}", queryUrl);
-          }
-          else {
-            LOGGER.error("Not I/O Error getting page. => Break loop query {}", queryUrl);
+          String errorText = Optional.ofNullable(Utils.readJson(content).at("/error").asText()).orElse("");
+          if (errorText.contains("HTTP 404")) {
+            LOGGER.error("HTTP 404 => Break loop query {}", queryUrl);
             break;
           }
+          LOGGER.error("I/O Error getting page. => Try again query {}", queryUrl);
           continue;
         }
         tryAgain = false;
