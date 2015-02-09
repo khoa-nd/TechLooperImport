@@ -28,7 +28,10 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 /**
@@ -37,6 +40,12 @@ import java.util.function.Consumer;
 public class Utils {
 
   private static Logger LOGGER = LoggerFactory.getLogger(Utils.class);
+
+  private static String iioFailsPath = PropertyManager.getProperty("iio.fails");
+
+  public static JsonNode readJson(File file) throws IOException {
+    return new ObjectMapper().readTree(file);
+  }
 
 //  public static FootPrint[] loadFootPrints(String filePath) {
 //    File file = new File(filePath);
@@ -80,13 +89,12 @@ public class Utils {
         JsonNode root = Utils.readIIOResult(content);
         if (!root.isArray()) {
           LOGGER.debug("Error result => query: {}", queryUrl);
-          if ("I/O Error getting page.".equals(Utils.readJson(content).at("/error").asText())) {
-            LOGGER.error("I/O Error getting page. => Try again query {}", queryUrl);
-          }
-          else {
-            LOGGER.error("Not I/O Error getting page. => Break loop query {}", queryUrl);
+          String errorText = Optional.ofNullable(Utils.readJson(content).at("/error").asText()).orElse("");
+          if (errorText.contains("HTTP 404")) {
+            LOGGER.error("HTTP 404 => Break loop query {}", queryUrl);
             break;
           }
+          LOGGER.error("I/O Error getting page. => Try again query {}", queryUrl);
           continue;
         }
         tryAgain = false;
@@ -95,12 +103,28 @@ public class Utils {
           LOGGER.debug("Empty result, query {}", queryUrl);
         }
 
-        LOGGER.debug("OK => Consuming {}", root);
+        LOGGER.debug("OK => Consuming query {}...", queryUrl);
         consumer.accept(root);
       }
     }
     catch (Exception e) {
-      LOGGER.error("Can not do crawler", e);
+      try {
+        File iioFailFile = new File(iioFailsPath);
+        if (iioFailFile.exists()) {
+          Files.write(Paths.get(iioFailsPath), Arrays.asList(queryUrl), StandardCharsets.UTF_8, StandardOpenOption.APPEND);
+        }
+        else {
+          File parentFile = iioFailFile.getParentFile();
+          if (!parentFile.exists()) {
+            parentFile.mkdirs();
+          }
+          Files.write(Paths.get(iioFailsPath), Arrays.asList(queryUrl), StandardCharsets.UTF_8, StandardOpenOption.CREATE);
+        }
+      }
+      catch (IOException ex) {
+        LOGGER.error("Can not write to fail file {}", iioFailsPath);
+      }
+      LOGGER.error("Can not do crawler {}", queryUrl, e);
     }
   }
 

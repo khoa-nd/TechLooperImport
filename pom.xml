@@ -98,6 +98,13 @@
     </dependency>
 
     <dependency>
+      <groupId>javax.servlet</groupId>
+      <artifactId>javax.servlet-api</artifactId>
+      <version>3.0.1</version>
+    </dependency>
+
+
+    <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <version>4.11</version>
@@ -121,7 +128,7 @@
 
   <profiles>
     <profile>
-      <id>githubUserCrawler</id>
+      <id>crawlerGHU</id>
       <build>
         <plugins>
           <plugin>
@@ -136,10 +143,10 @@
                 </goals>
                 <configuration>
                   <mainClass>com.techlooper.crawlers.GitHubUserCrawler</mainClass>
-                  <arguments>
-                    <argument>${country}</argument>
-                    <argument>${outputDirectory}</argument>
-                  </arguments>
+                  <!--<arguments>-->
+                    <!--<argument>${country}</argument>-->
+                    <!--<argument>${outputDirectory}</argument>-->
+                  <!--</arguments>-->
                 </configuration>
               </execution>
             </executions>
@@ -149,7 +156,7 @@
     </profile>
 
     <profile>
-      <id>githubUserImport</id>
+      <id>importGHU</id>
       <build>
         <plugins>
           <plugin>
@@ -173,7 +180,7 @@
     </profile>
 
     <profile>
-      <id>githubUserProfileEnricher</id>
+      <id>enrichGHUP</id>
       <build>
         <plugins>
           <plugin>
