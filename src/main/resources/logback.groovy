@@ -44,26 +44,13 @@ appender("ENRICHER", RollingFileAppender) {
     pattern = "%d{dd-MM-yyyy HH:mm:ss.SSS} %p [%t] %c{1}: %m%n"
   }
 }
+logger("com.techlooper.enricher", ALL, ["CONSOLE","ENRICHER"], Boolean.FALSE)
+
 
 appender("IMPORT", RollingFileAppender) {
   file = "import.log"
   rollingPolicy(FixedWindowRollingPolicy) {
     fileNamePattern = "import_%i.log"
-    minIndex = 1
-    maxIndex = 24
-  }
-  triggeringPolicy(SizeBasedTriggeringPolicy) {
-    maxFileSize = "12MB"
-  }
-  encoder(PatternLayoutEncoder) {
-    pattern = "%d{dd-MM-yyyy HH:mm:ss.SSS} %p [%t] %c{1}: %m%n"
-  }
-}
-
-appender("PROPERTIES", RollingFileAppender) {
-  file = "properties.log"
-  rollingPolicy(FixedWindowRollingPolicy) {
-    fileNamePattern = "properties_%i.log"
     minIndex = 1
     maxIndex = 24
   }

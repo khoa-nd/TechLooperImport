@@ -46,7 +46,7 @@ public class GitHubUserCrawler {
   private static int fixedThreadPool = Integer.parseInt(PropertyManager.getProperty("fixedThreadPool"));
 
   public static void main(String[] args) throws IOException, InterruptedException, ParseException {
-    Utils.sureDirectory(outputDirectory);
+    Utils.sureFolder(outputDirectory);
 //    final String[] countries = {"vietnam"x, "japan"x, "thailand"x, "singapore"x, "malaysia"x, "indonesia"x, "australia"x, "china"x, "india"x, "korea", "taiwan",
 //      "spain", "ukraine", "poland", "russia", "bulgaria", "turkey", "greece", "serbia", "romania", "belarus", "lithuania", "estonia",
 //      "italy", "portugal", "colombia", "brazil", "chile", "argentina", "venezuela", "bolivia", "mexico"};

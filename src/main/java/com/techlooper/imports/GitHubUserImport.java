@@ -51,7 +51,7 @@ public class GitHubUserImport {
     try {
       StringBuilder builder = new StringBuilder();
       Files.readAllLines(filePath, StandardCharsets.UTF_8).forEach(builder::append);
-      JsonNode users = Utils.readJson(builder.toString());
+      JsonNode users = Utils.parseJson(builder.toString());
       users.forEach(user -> {
         ObjectNode node = (ObjectNode) user;
         node.put("crawlersource", "GITHUB");
@@ -66,7 +66,7 @@ public class GitHubUserImport {
       executorService.execute(() -> {
         try {
           LOGGER.debug(">>>>Start posting to api<<<<");
-          int rspCode = Utils.postJsonString(addUserApi, users.toString());
+          int rspCode = Utils.postAndGetStatus(addUserApi, users);
           if (rspCode == HttpServletResponse.SC_NO_CONTENT) {
             Files.move(filePath, Paths.get(filePath.toString() + ".ok"));
           }

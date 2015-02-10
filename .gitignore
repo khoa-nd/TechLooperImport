@@ -4,6 +4,4 @@ target
 
 *.iml
 *.class
-*.json
-*.zip
 *.log
