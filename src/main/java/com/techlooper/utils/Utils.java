@@ -1,5 +1,6 @@
 package com.techlooper.utils;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
@@ -202,6 +203,19 @@ public class Utils {
     BufferedWriter writer = Files.newBufferedWriter(Paths.get(filepath), StandardCharsets.UTF_8, StandardOpenOption.CREATE);
     writer.write(content);
     writer.close();
+  }
+
+  public static <T> Optional<String> toJSON(T object) {
+    final ObjectMapper objectMapper = new ObjectMapper();
+    objectMapper.configure(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT, true);
+    Optional<String> result = Optional.empty();
+    try {
+      result = Optional.ofNullable(objectMapper.writeValueAsString(object));
+    }
+    catch (IOException e) {
+      LOGGER.error(e.getMessage(), e);
+    }
+    return result;
   }
   //    Files.lines(Paths.get(inputFile), StandardCharsets.UTF_8).parallel().forEach(username -> {
 //      try {

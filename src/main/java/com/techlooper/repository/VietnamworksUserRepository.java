@@ -1,0 +1,49 @@
+package com.techlooper.repository;
+
+import com.techlooper.pojo.VietnamworksUser;
+import org.springframework.jdbc.core.BeanPropertyRowMapper;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.stereotype.Repository;
+import org.springframework.stereotype.Service;
+
+import javax.annotation.Resource;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+/**
+ * Created by NguyenDangKhoa on 2/10/15.
+ */
+@Repository("vietnamworksUserRepository")
+public class VietnamworksUserRepository {
+
+  @Resource
+  private JdbcTemplate jdbcTemplate;
+
+  private final String resumeSqlQuery = "select r.* from tblresume r inner join tblregistrationinfo i on r.userid = i.userid where resumeid in (:resumeIds) and i.isactive = 1";
+  private final String totalUserSqlQuery = "select count(distinct resumeid) from tblresume_industry where industryid = 35";
+  private final String getResumeListSqlQuery = "select resumeid from tblresume_industry where industryid = 35 limit ?, ?";
+
+  public int getTotalUser() {
+    return jdbcTemplate.queryForInt(totalUserSqlQuery);
+  }
+
+  public List<Long> getResumeList(int fromIndex, int pageSize) {
+    return jdbcTemplate.queryForList(getResumeListSqlQuery, Long.class, fromIndex, pageSize);
+  }
+
+  public List<VietnamworksUser> getUsersByResumeId(List<Long> resumeIds) {
+    NamedParameterJdbcTemplate namedParameterJdbcTemplate = new NamedParameterJdbcTemplate(jdbcTemplate);
+    Map<String, Object> parameterMap = new HashMap<String, Object>();
+    parameterMap.put("resumeIds", resumeIds);
+    return namedParameterJdbcTemplate.query(resumeSqlQuery, parameterMap,
+            new BeanPropertyRowMapper<VietnamworksUser>(VietnamworksUser.class));
+  }
+
+}
