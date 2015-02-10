@@ -109,6 +109,6 @@ logger("com.techlooper.crawlers.GitHubUserCrawler", ALL, ["CONSOLE", "CRAWLERS"]
 logger("com.techlooper.imports.GitHubUserProfileEnricher", ALL, ["CONSOLE","ENRICHER"], Boolean.FALSE)
 logger("com.techlooper.imports.GitHubUserImport", ALL, ["CONSOLE", "IMPORT"], Boolean.FALSE)
 logger("com.techlooper.utils.PropertyManager", ALL, ["CONSOLE", "PROPERTIES"], Boolean.FALSE)
-logger("com.techlooper.utils.VietnamworksUserImport", ALL, ["CONSOLE", "VIETNAMWORKS_IMPORT"], Boolean.FALSE)
+logger("com.techlooper.imports.VietnamworksUserImport", ALL, ["CONSOLE", "VIETNAMWORKS_IMPORT"], Boolean.FALSE)
 
 root(ERROR, ["CONSOLE", "ROOT"])
