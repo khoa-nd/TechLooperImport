@@ -108,7 +108,7 @@ public class AboutMeEnricher {
     });
     builder.deleteCharAt(0);
 
-    consumeApiResponse(doApiQuery(apiTerm, builder.toString()), currentUserQueryFoot() + ".es");
+    consumeApiResponse(doApiQuery(apiTerm, builder.toString()), config.at("/userQuery/from").asInt() + ".es");
   }
 
   public static void consumeApiResponse(JsonNode response, String source) {
@@ -160,10 +160,6 @@ public class AboutMeEnricher {
         LOGGER.error("ERROR", ex);
       }
     }
-  }
-
-  private static int currentUserQueryFoot() {
-    return config.at("/userQuery/from").asInt();
   }
 
   private static void refineEnrichUser(JsonNode user) {
