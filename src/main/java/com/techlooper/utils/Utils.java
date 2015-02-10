@@ -154,10 +154,15 @@ public class Utils {
     return client;
   }
 
-  public static int postAndGetStatus(String url, JsonNode jsonNode) throws IOException, UnirestException {
-    int rsp = Unirest.post(url).body(jsonNode.toString()).asString().getStatus();
+  public static int postAndGetStatus(String url, String json) throws IOException, UnirestException {
+    int rsp = Unirest.post(url).body(json).asString().getStatus();
     LOGGER.debug("Response code of url {} ", rsp);
     return rsp;
+  }
+
+
+  public static int postAndGetStatus(String url, JsonNode jsonNode) throws IOException, UnirestException {
+    return postAndGetStatus(url, jsonNode.toString());
   }
 
   public static void sureFile(String failListPath) throws IOException {
