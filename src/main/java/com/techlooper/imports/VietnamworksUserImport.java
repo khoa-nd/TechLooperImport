@@ -42,7 +42,7 @@ public class VietnamworksUserImport {
       Optional<String> vietnamworksUsers = Utils.toJSON(vietnamworksUserRepository.getUsersByResumeId(resumes));
 
       if (vietnamworksUsers.isPresent()) {
-        int result = Utils.postJsonString(enrichUserAPI, vietnamworksUsers.get());
+        int result = Utils.postAndGetStatus(enrichUserAPI, vietnamworksUsers.get());
         LOGGER.info("Imported user in page #" + pageIndex + " successfully.");
         if (result != 204) {
           LOGGER.info("Import user in page #" + pageIndex + " fail.");
