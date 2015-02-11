@@ -149,7 +149,7 @@ public class Utils {
   }
 
   public static int postAndGetStatus(String url, String json) throws IOException, UnirestException {
-    int rsp = Unirest.post(url).body(json).asString().getStatus();
+    int rsp = Unirest.post(url).header("Content-Type", "application/json").body(json).asString().getStatus();
     LOGGER.debug("Response code of url {} ", rsp);
     return rsp;
   }
