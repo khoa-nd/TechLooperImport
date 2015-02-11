@@ -1,6 +1,5 @@
 package com.techlooper.imports;
 
-import com.techlooper.pojo.VietnamworksUser;
 import com.techlooper.repository.VietnamworksUserRepository;
 import com.techlooper.utils.Utils;
 import org.slf4j.Logger;

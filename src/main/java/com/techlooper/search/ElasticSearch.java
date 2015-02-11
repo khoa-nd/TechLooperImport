@@ -1,7 +1,6 @@
-package com.techlooper.es;
+package com.techlooper.search;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
@@ -16,9 +15,9 @@ import java.util.function.Consumer;
  */
 public class ElasticSearch {
 
-  private final JsonNode config;
+  private JsonNode config;
 
-  private final Logger logger;
+  private Logger logger;
 
   public ElasticSearch(JsonNode config, Logger logger) {
     this.config = config;

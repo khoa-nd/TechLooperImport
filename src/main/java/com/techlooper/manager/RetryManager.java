@@ -2,7 +2,6 @@ package com.techlooper.manager;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.techlooper.utils.PropertyManager;
 import com.techlooper.utils.Utils;
 import org.slf4j.Logger;
 
@@ -12,9 +11,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Optional;
-import java.util.function.Consumer;
-import java.util.stream.Stream;
+import java.util.function.BiConsumer;
 
 /**
  * Created by phuonghqh on 2/10/15.
@@ -25,64 +22,46 @@ public class RetryManager {
 
   private JsonNode config;
 
-  private static String folder = PropertyManager.getProperty("folder");
-
   public RetryManager(JsonNode config, Logger logger) {
     this.config = config;
     this.logger = logger;
   }
 
-  public void retry(Consumer<JsonNode> unsuceedTechlooperConsumer, Consumer<String> failListConsumer) {
-    Optional.ofNullable(unsuceedTechlooperConsumer).ifPresent(consumer -> {
-      logger.debug("Retry from unsuceedTechlooper");
-      try {
-        fromFile(".json").parallel().forEach(path -> {
-          try {
-            consumer.accept(Utils.parseJson(new File(path.toString())));
-          }
-          catch (IOException e) {
-            logger.error("ERROR", e);
-          }
-        });
-      }
-      catch (IOException e) {
-        logger.error("ERROR", e);
-      }
-    });
-
-    Optional.ofNullable(failListConsumer).ifPresent(consumer -> {
-      logger.debug("Retry from fail list");
-      try {
-        fromFailList(consumer);
-      }
-      catch (IOException e) {
-        logger.error("ERROR", e);
-      }
-    });
-  }
-
-  public Stream<Path> fromFile(String ext) throws IOException {
-    return Files.find(Paths.get(folder), 1, (path, attrs) -> {
+  public void fromFile(String folder, String ext, BiConsumer<Path, JsonNode> consumer) throws IOException {
+    logger.debug("Recover from file ext: {}", ext);
+    Files.find(Paths.get(folder), 1, (path, attrs) -> {
       if (attrs.isRegularFile()) {
         return path.toString().endsWith(ext);
       }
       return false;
+    }).forEach(path -> {
+      try {
+        consumer.accept(path, Utils.parseJson(new File(path.toString())));
+      }
+      catch (IOException e) {
+        logger.error("ERROR", e);
+      }
     });
   }
 
-  public void fromFailList(Consumer<String> consumer) throws IOException {
+  public void fromFailList(BiConsumer<Integer, String> consumer) throws IOException {
     String failListPath = config.at("/failListPath").asText();
     if (new File(failListPath).length() == 0) {
       logger.debug("Empty fail list at {}", failListPath);
       return;
     }
 
-    logger.debug("Recover from file {}", failListPath);
-    Path target = Paths.get(failListPath + ".done");
-    Files.move(Paths.get(failListPath), target);
-    Files.lines(target, StandardCharsets.UTF_8).forEach(consumer::accept);
+    String doneFilePath = failListPath + ".done";
+    if (new File(doneFilePath).exists()) {
+      logger.debug("Already done at {}", doneFilePath);
+      return;
+    }
 
-    logger.debug("Done file {}", target);
+    logger.debug("Recover from file {}", failListPath);
+    final Integer[] index = {0};
+    Files.lines(Paths.get(failListPath), StandardCharsets.UTF_8).forEach(queryUrl -> consumer.accept(index[0]++, queryUrl));
+
+    logger.debug("Done file {}", failListPath);
     ((ObjectNode) config).remove("failListPath");
   }
 }

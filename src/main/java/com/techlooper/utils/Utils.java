@@ -15,7 +15,6 @@ import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -27,7 +26,6 @@ import java.nio.file.StandardOpenOption;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.function.Consumer;
-import java.util.stream.StreamSupport;
 
 /**
  * Created by phuonghqh on 1/27/15.
@@ -125,12 +123,7 @@ public class Utils {
   }
 
   public static void sureFolder(String... dirPaths) {
-    Arrays.stream(dirPaths).forEach(path -> {
-      File dir = new File(path);
-      if (!dir.exists()) {
-        dir.mkdirs();
-      }
-    });
+    Arrays.stream(dirPaths).forEach(path -> new File(path).mkdirs());
   }
 
   public static void writeToFile(JsonNode root, String filePath) throws IOException {
@@ -172,11 +165,7 @@ public class Utils {
       return;
     }
 
-    File parent = new File(file.getParent());
-    if (!parent.exists()) {
-      parent.mkdirs();
-    }
-
+    new File(file.getParent()).mkdirs();
     file.createNewFile();
   }
 
