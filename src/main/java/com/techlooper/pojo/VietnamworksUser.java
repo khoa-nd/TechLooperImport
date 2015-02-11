@@ -61,6 +61,7 @@ public class VietnamworksUser {
   private String resumepathattachedfile;
   private String resumecontent;
   private String userpathpicturefile;
+  private String crawlersource = "VIETNAMWORKS";
 
   public Long getResumeid() {
     return resumeid;
@@ -492,5 +493,13 @@ public class VietnamworksUser {
 
   public void setUserpathpicturefile(String userpathpicturefile) {
     this.userpathpicturefile = userpathpicturefile;
+  }
+
+  public String getCrawlersource() {
+    return crawlersource;
+  }
+
+  public void setCrawlersource(String crawlersource) {
+    this.crawlersource = crawlersource;
   }
 }
