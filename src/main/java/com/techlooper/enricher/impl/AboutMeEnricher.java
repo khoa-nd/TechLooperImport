@@ -23,7 +23,7 @@ public class AboutMeEnricher extends AbstractEnricher {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(AboutMeEnricher.class);
 
-  private void prepareApiQuery(JsonNode users, String userPath, String apiTerm) {
+  private void doApiQuery(JsonNode users, String userPath, String apiTerm) {
     StringBuilder builder = new StringBuilder();
     users.forEach((user) -> {
       JsonNode field = user.at(userPath).get(0);
@@ -110,7 +110,7 @@ public class AboutMeEnricher extends AbstractEnricher {
 
   public void consumeESUsers(JsonNode users) {
     LOGGER.debug("Consume elastic search users");
-    prepareApiQuery(users, "/fields/profiles.GITHUB.email", "email");
+    doApiQuery(users, "/fields/profiles.GITHUB.email", "email");
   }
 
 }

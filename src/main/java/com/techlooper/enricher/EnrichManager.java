@@ -2,8 +2,8 @@ package com.techlooper.enricher;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.mashape.unirest.http.exceptions.UnirestException;
-import com.techlooper.es.ElasticSearch;
 import com.techlooper.manager.RetryManager;
+import com.techlooper.search.ElasticSearch;
 import com.techlooper.utils.PropertyManager;
 import com.techlooper.utils.Utils;
 import org.slf4j.Logger;
@@ -45,16 +45,29 @@ public class EnrichManager {
       executorService = Executors.newFixedThreadPool(fixedThreadPool);
 
       appConfig.get("enrichers").forEach(enricher -> {
+        JsonNode eConfig = null;
+        String clz = enricher.get("class").asText();
+        String eConfigPath = enricher.get("eConfigPath").asText();
         try {
-          String clz = enricher.get("class").asText();
-          String configPath = enricher.get("configPath").asText();
-          LOGGER.debug("Make instance of {} with config {}", clz, configPath);
+          LOGGER.debug("Make instance of {} with eConfig {}", clz, eConfigPath);
           Enricher eInstance = (Enricher) Class.forName(clz).newInstance();
-          eInstance.initialize(executorService, configPath, appConfig);
-          doEnrich(eInstance, eInstance.getConfig());
+          eInstance.initialize(executorService, eConfigPath, appConfig);
+
+          eConfig = eInstance.getConfig();
+          doEnrich(eInstance, eConfig);
         }
         catch (Exception e) {
           LOGGER.error("ERROR", e);
+        }
+
+        if (eConfig != null) {
+          LOGGER.debug("Rewrite configuration at {}", eConfigPath);
+          try {
+            Utils.writeToFile(eConfig, eConfigPath);
+          }
+          catch (IOException e) {
+            LOGGER.error("Error", e);
+          }
         }
       });
     }

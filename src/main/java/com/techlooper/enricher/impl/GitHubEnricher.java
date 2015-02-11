@@ -14,7 +14,6 @@ public class GitHubEnricher extends AbstractEnricher {
   public void consumeESUsers(JsonNode users) {
     LOGGER.debug("Consume elastic search users");
 
-
   }
 
   public void retryFailApi(Integer lineIndex, String queryUrl) {

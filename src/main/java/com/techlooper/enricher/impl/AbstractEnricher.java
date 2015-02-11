@@ -10,6 +10,7 @@ import org.joda.time.format.DateTimeFormatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.IOException;
 import java.util.Locale;
@@ -47,8 +48,13 @@ public abstract class AbstractEnricher implements Enricher {
       if (new File(source).exists()) {
         jsonPath = source;
       }
-      Unirest.post(url).body(users.toString()).asString().getStatus();
-      Utils.writeToFile(users, String.format("%s.ok", jsonPath));
+      int statusCode = Unirest.post(url).header("Content-Type", "application/json").body(users.toString()).asString().getStatus();
+      if (statusCode == HttpServletResponse.SC_NO_CONTENT) {
+        Utils.writeToFile(users, String.format("%s.ok", jsonPath));
+      }
+      else {
+        Utils.writeToFile(users, jsonPath);
+      }
     }
     catch (Exception e) {
       LOGGER.error("Not post to {}, error: {}", url, e);

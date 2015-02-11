@@ -1,6 +1,7 @@
 {
   "techlooper": {
-    "apiUrl": "http://techlooper.com/api/users/addAll",
+    "apiUrl": "http://172.17.2.89:8080/techlooper/api/users/addAll",
+    "folderName": "techlooper/",
     "mapper": [
       {
         "from": "user_name",
