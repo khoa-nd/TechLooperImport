@@ -27,7 +27,7 @@ public class VietnamworksUserImport {
     String enrichUserAPI = applicationContext.getEnvironment().getProperty("githubUserProfileEnricher.techlooper.api.enrichUser");
 
     final int totalUsers = vietnamworksUserRepository.getTotalUser();
-    final int pageSize = 100;
+    final int pageSize = 10;
     final int numberOfPages = totalUsers % pageSize == 0 ? totalUsers / pageSize : totalUsers / pageSize + 1;
     int pageIndex = 0;
 
@@ -43,11 +43,10 @@ public class VietnamworksUserImport {
         }
         else {
           LOGGER.info("Import user in page #" + pageIndex + " fail.");
-          LOGGER.info(jsonUsers);
         }
       }
       pageIndex++;
-      Thread.sleep(3000);
+      Thread.sleep(2000);
     }
   }
 
