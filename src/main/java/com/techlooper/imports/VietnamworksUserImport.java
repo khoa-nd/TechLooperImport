@@ -20,6 +20,7 @@ public class VietnamworksUserImport {
 
   private static VietnamworksUserRepository vietnamworksUserRepository;
 
+
   public static void main(String[] args) throws Throwable {
     ApplicationContext applicationContext = new AnnotationConfigApplicationContext(VietnamworksDatabaseConfiguration.class);
     vietnamworksUserRepository = applicationContext.getBean("vietnamworksUserRepository", VietnamworksUserRepository.class);
@@ -30,19 +31,23 @@ public class VietnamworksUserImport {
     final int numberOfPages = totalUsers % pageSize == 0 ? totalUsers / pageSize : totalUsers / pageSize + 1;
     int pageIndex = 0;
 
-    while (pageIndex < 2) {
+    while (pageIndex < numberOfPages) {
       List<Long> resumes = vietnamworksUserRepository.getResumeList(pageIndex * pageSize, pageSize);
       Optional<String> vietnamworksUsers = Utils.toJSON(vietnamworksUserRepository.getUsersByResumeId(resumes));
 
       if (vietnamworksUsers.isPresent()) {
-        int result = Utils.postAndGetStatus(enrichUserAPI, vietnamworksUsers.get().replaceAll("skills", "skill"));
+        String jsonUsers = vietnamworksUsers.get().replaceAll("skills", "skill");
+        int result = Utils.postAndGetStatus(enrichUserAPI, jsonUsers);
         if (result == 204) {
           LOGGER.info("Imported user in page #" + pageIndex + " successfully.");
         }
         else {
           LOGGER.info("Import user in page #" + pageIndex + " fail.");
+          LOGGER.info(jsonUsers);
         }
       }
+      pageIndex++;
+      Thread.sleep(3000);
     }
   }
 
