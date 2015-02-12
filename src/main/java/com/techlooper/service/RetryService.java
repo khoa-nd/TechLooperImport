@@ -46,7 +46,8 @@ public class RetryService {
 
   public void fromFailList(BiConsumer<Integer, String> consumer) throws IOException {
     String failListPath = config.at("/failListPath").asText();
-    if (new File(failListPath).length() == 0) {
+    File failListFile = new File(failListPath);
+    if (failListFile.exists() && failListFile.length() == 0) {
       logger.debug("Empty fail list at {}", failListPath);
       return;
     }
