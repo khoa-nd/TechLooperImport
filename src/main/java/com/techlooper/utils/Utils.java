@@ -154,7 +154,6 @@ public class Utils {
     return rsp;
   }
 
-
   public static int postAndGetStatus(String url, JsonNode jsonNode) throws IOException, UnirestException {
     return postAndGetStatus(url, jsonNode.toString());
   }

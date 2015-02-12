@@ -1,4 +1,4 @@
-package com.techlooper.search;
+package com.techlooper.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -13,13 +13,13 @@ import java.util.function.Consumer;
 /**
  * Created by phuonghqh on 2/9/15.
  */
-public class ElasticSearch {
+public class ElasticSearchService {
 
   private JsonNode config;
 
   private Logger logger;
 
-  public ElasticSearch(JsonNode config, Logger logger) {
+  public ElasticSearchService(JsonNode config, Logger logger) {
     this.config = config;
     this.logger = logger;
   }

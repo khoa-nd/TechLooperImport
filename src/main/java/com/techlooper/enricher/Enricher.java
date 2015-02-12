@@ -16,6 +16,8 @@ public interface Enricher {
 
   JsonNode getConfig();
 
+  String getTechlooperFolder();
+
   void postTechlooper(String source, JsonNode jsonNode);
 
   void retryFailApi(Integer lineIndex, String queryUrl);

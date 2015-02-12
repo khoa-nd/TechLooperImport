@@ -13,6 +13,8 @@ import org.slf4j.LoggerFactory;
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 
@@ -26,6 +28,8 @@ public abstract class AbstractEnricher implements Enricher {
   protected String configPath;
 
   protected String folder;
+
+  protected String ioFolder;
 
   protected String failListPath;
 
@@ -50,14 +54,19 @@ public abstract class AbstractEnricher implements Enricher {
       }
       int statusCode = Unirest.post(url).header("Content-Type", "application/json").body(users.toString()).asString().getStatus();
       if (statusCode == HttpServletResponse.SC_NO_CONTENT) {
-        Utils.writeToFile(users, String.format("%s.ok", jsonPath));
+        if (new File(jsonPath).exists()) {
+          Files.move(Paths.get(jsonPath), Paths.get(jsonPath + ".ok"));
+        }
+        else {
+          Utils.writeToFile(users, String.format("%s.ok", jsonPath));
+        }
       }
       else {
         Utils.writeToFile(users, jsonPath);
       }
     }
     catch (Exception e) {
-      LOGGER.error("Not post to {}, error: {}", url, e);
+      LOGGER.error("Not post to url = {}, error= {}", url, e);
       try {
         Utils.writeToFile(users, jsonPath);
       }
@@ -85,11 +94,16 @@ public abstract class AbstractEnricher implements Enricher {
 
   private void prepareProperties() {
     folder = this.appConfig.get("folder").asText();
-    failListPath = String.format("%s%s.txt", folder, dateTimeFormatter.print(DateTime.now()));
+    ioFolder = folder + config.get("folderName").asText();
+    failListPath = String.format("%s%s.txt", ioFolder, dateTimeFormatter.print(DateTime.now()));
 
-    techlooperFolder = folder + config.at("/techlooper/folderName").asText();
-    apiFolder = folder + config.at("/api/folderName").asText();
+    techlooperFolder = ioFolder + config.at("/techlooper/folderName").asText();
+    apiFolder = ioFolder + config.at("/api/folderName").asText();
     Utils.sureFolder(techlooperFolder, apiFolder);
+  }
+
+  public String getTechlooperFolder() {
+    return techlooperFolder;
   }
 
   public JsonNode getConfig() {

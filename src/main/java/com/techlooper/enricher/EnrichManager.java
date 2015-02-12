@@ -3,7 +3,7 @@ package com.techlooper.enricher;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import com.techlooper.manager.RetryManager;
-import com.techlooper.search.ElasticSearch;
+import com.techlooper.service.ElasticSearchService;
 import com.techlooper.utils.PropertyManager;
 import com.techlooper.utils.Utils;
 import org.slf4j.Logger;
@@ -27,41 +27,39 @@ public class EnrichManager {
 
   private static String folder;
 
-  private static String techlooperFolder;
-
   private static JsonNode appConfig;
 
   private static ExecutorService executorService;
 
-  public static void main(String[] args) throws IOException {
+  public static void main(String[] args) {
     try {
       appConfig = Utils.parseJson(new File(appConfigPath));
       fixedThreadPool = appConfig.get("fixedThreadPool").asInt();
 
       folder = appConfig.get("folder").asText();
-      techlooperFolder = folder + appConfig.at("/techlooper/folderName").asText();
-      Utils.sureFolder(folder, techlooperFolder);
+      Utils.sureFolder(folder);
 
       executorService = Executors.newFixedThreadPool(fixedThreadPool);
 
       appConfig.get("enrichers").forEach(enricher -> {
         JsonNode eConfig = null;
         String clz = enricher.get("class").asText();
-        String eConfigPath = enricher.get("eConfigPath").asText();
+        String eConfigPath = enricher.get("configPath").asText();
         try {
-          LOGGER.debug("Make instance of {} with eConfig {}", clz, eConfigPath);
+          LOGGER.debug("Make instance of {} with configPath = {}", clz, eConfigPath);
           Enricher eInstance = (Enricher) Class.forName(clz).newInstance();
           eInstance.initialize(executorService, eConfigPath, appConfig);
 
           eConfig = eInstance.getConfig();
-          doEnrich(eInstance, eConfig);
+          retryFromLastPrint(eInstance, eConfig);
+          enrichUser(eInstance, eConfig);
         }
         catch (Exception e) {
           LOGGER.error("ERROR", e);
         }
 
         if (eConfig != null) {
-          LOGGER.debug("Rewrite configuration at {}", eConfigPath);
+          LOGGER.debug("Rewrite configuration at path = {}", eConfigPath);
           try {
             Utils.writeToFile(eConfig, eConfigPath);
           }
@@ -77,12 +75,16 @@ public class EnrichManager {
     executorService.shutdown();
   }
 
-  private static void doEnrich(Enricher eInstance, JsonNode eConfig) throws IOException, UnirestException {
-    RetryManager retryManager = new RetryManager(eConfig, LOGGER);
-    retryManager.fromFile(techlooperFolder, ".json", (path, jsonNode) -> eInstance.postTechlooper(path.toString(), jsonNode));
-    retryManager.fromFailList((index, queryUrl) -> eInstance.retryFailApi(index, queryUrl));
-
-    ElasticSearch elasticSearch = new ElasticSearch(eConfig, LOGGER);
+  private static void enrichUser(Enricher eInstance, JsonNode eConfig) throws IOException, UnirestException {
+    LOGGER.debug("Enrich users from Elastic Search >>");
+    ElasticSearchService elasticSearch = new ElasticSearchService(eConfig, LOGGER);
     elasticSearch.queryUserInfo((users) -> eInstance.consumeESUsers(users));
+  }
+
+  private static void retryFromLastPrint(Enricher eInstance, JsonNode eConfig) throws IOException {
+    LOGGER.debug("Retry from last print >>");
+    RetryManager retryManager = new RetryManager(eConfig, LOGGER);
+    retryManager.fromFile(eInstance.getTechlooperFolder(), ".json", (path, jsonNode) -> eInstance.postTechlooper(path.toString(), jsonNode));
+    retryManager.fromFailList((index, queryUrl) -> eInstance.retryFailApi(index, queryUrl));
   }
 }
