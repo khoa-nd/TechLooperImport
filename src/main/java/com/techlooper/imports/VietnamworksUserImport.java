@@ -50,6 +50,7 @@ public class VietnamworksUserImport {
         }
       }
       pageIndex++;
+      Thread.sleep(3000);
     }
   }
 
