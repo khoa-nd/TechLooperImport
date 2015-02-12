@@ -1,10 +1,7 @@
 package com.techlooper.configuration;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.PropertySource;
-import org.springframework.context.annotation.PropertySources;
+import org.springframework.context.annotation.*;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
@@ -16,8 +13,11 @@ import java.sql.SQLException;
  * Created by NguyenDangKhoa on 2/9/15.
  */
 @Configuration
+@ComponentScan(basePackages = "com.techlooper")
 @PropertySources({
-        @PropertySource("classpath:application.properties")})
+  @PropertySource("classpath:application.properties"),
+  @PropertySource(value = "classpath:override.properties", ignoreResourceNotFound = true)
+})
 public class VietnamworksDatabaseConfiguration {
 
   @Value("${vietnamworks.db.connectionUrl}")
