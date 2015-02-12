@@ -7,6 +7,12 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import com.techlooper.pojo.FootPrint;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.HttpClients;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.ImmutableSettings;
@@ -37,7 +43,7 @@ public class Utils {
   private static String iioFailsPath = PropertyManager.getProperty("iio.fails");
 
   public static Optional<String> emptyStringOptional(String str) {
-    return Optional.ofNullable(str).filter( s -> !s.isEmpty());
+    return Optional.ofNullable(str).filter(s -> !s.isEmpty());
   }
 
   public static JsonNode parseJson(File file) throws IOException {
@@ -50,8 +56,7 @@ public class Utils {
     if (file.exists()) {
       try {
         return new ObjectMapper().readValue(file, FootPrint.class);
-      }
-      catch (Exception e) {
+      } catch (Exception e) {
         LOGGER.error("ERROR", e);
       }
     }
@@ -90,22 +95,19 @@ public class Utils {
         LOGGER.debug("OK => Consuming query {}...", queryUrl);
         consumer.accept(root);
       }
-    }
-    catch (Exception e) {
+    } catch (Exception e) {
       try {
         File iioFailFile = new File(iioFailsPath);
         if (iioFailFile.exists()) {
           Files.write(Paths.get(iioFailsPath), Arrays.asList(queryUrl), StandardCharsets.UTF_8, StandardOpenOption.APPEND);
-        }
-        else {
+        } else {
           File parentFile = iioFailFile.getParentFile();
           if (!parentFile.exists()) {
             parentFile.mkdirs();
           }
           Files.write(Paths.get(iioFailsPath), Arrays.asList(queryUrl), StandardCharsets.UTF_8, StandardOpenOption.CREATE);
         }
-      }
-      catch (IOException ex) {
+      } catch (IOException ex) {
         LOGGER.error("Can not write to fail file {}", iioFailsPath);
       }
       LOGGER.error("Can not do crawler {}", queryUrl, e);
@@ -114,11 +116,11 @@ public class Utils {
 
   public static String postIIOAndReadContent(String connectorId, String userId, String apiKey, String queryUrl) throws UnirestException, UnsupportedEncodingException {
     String url = String.format("https://api.import.io/store/data/%s/_query?_user=%s&_apikey=%s",
-      connectorId, userId, URLEncoder.encode(apiKey, "UTF-8"));
+            connectorId, userId, URLEncoder.encode(apiKey, "UTF-8"));
     LOGGER.debug("Request IIO by query url {}", queryUrl);
     queryUrl = JsonNodeFactory.instance.objectNode()
-      .set("input", JsonNodeFactory.instance.objectNode()
-      .put("webpage/url", queryUrl)).toString();
+            .set("input", JsonNodeFactory.instance.objectNode()
+                    .put("webpage/url", queryUrl)).toString();
     return Unirest.post(url).body(new com.mashape.unirest.http.JsonNode(queryUrl)).asString().getBody();
   }
 
@@ -140,7 +142,7 @@ public class Utils {
 
   public static Client esClient() {
     Settings settings = ImmutableSettings.settingsBuilder()
-      .put("cluster.name", PropertyManager.properties.getProperty("es.userimport.cluster.name")).build();
+            .put("cluster.name", PropertyManager.properties.getProperty("es.userimport.cluster.name")).build();
 
     TransportClient client = new TransportClient(settings);
     String host = PropertyManager.properties.getProperty("es.userimport.host");
@@ -149,9 +151,14 @@ public class Utils {
   }
 
   public static int postAndGetStatus(String url, String json) throws IOException, UnirestException {
-    int rsp = Unirest.post(url).header("Content-Type", "application/json").body(json).asString().getStatus();
-    LOGGER.debug("Response code of url {} ", rsp);
-    return rsp;
+//    int rsp = Unirest.post(url).header("Content-Type", "application/json").body(json).asString().getStatus();
+//    LOGGER.debug("Response code of url {} ", rsp);
+//    return rsp;
+    HttpClient httpClient = HttpClients.createDefault();
+    HttpPost post = new HttpPost(url);
+    post.setEntity(new StringEntity(json, ContentType.create("application/json", StandardCharsets.UTF_8)));
+    HttpResponse response = httpClient.execute(post);
+    return response.getStatusLine().getStatusCode();
   }
 
   public static int postAndGetStatus(String url, JsonNode jsonNode) throws IOException, UnirestException {
@@ -174,8 +181,7 @@ public class Utils {
     Optional<String> result = Optional.empty();
     try {
       result = Optional.ofNullable(objectMapper.writeValueAsString(object));
-    }
-    catch (IOException e) {
+    } catch (IOException e) {
       LOGGER.error(e.getMessage(), e);
     }
     return result;
