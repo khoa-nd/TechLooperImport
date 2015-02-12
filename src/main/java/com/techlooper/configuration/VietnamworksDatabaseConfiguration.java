@@ -17,7 +17,8 @@ import java.sql.SQLException;
  */
 @Configuration
 @PropertySources({
-        @PropertySource("classpath:application.properties")})
+        @PropertySource("classpath:application.properties"),
+        @PropertySource("classpath:override.properties")})
 public class VietnamworksDatabaseConfiguration {
 
   @Value("${vietnamworks.db.connectionUrl}")
