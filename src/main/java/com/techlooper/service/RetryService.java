@@ -1,4 +1,4 @@
-package com.techlooper.manager;
+package com.techlooper.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -16,13 +16,13 @@ import java.util.function.BiConsumer;
 /**
  * Created by phuonghqh on 2/10/15.
  */
-public class RetryManager {
+public class RetryService {
 
   private Logger logger;
 
   private JsonNode config;
 
-  public RetryManager(JsonNode config, Logger logger) {
+  public RetryService(JsonNode config, Logger logger) {
     this.config = config;
     this.logger = logger;
   }

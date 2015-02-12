@@ -101,17 +101,24 @@ public class AboutMeEnricher extends AbstractEnricher {
 
   private JsonNode postApi(String queryUrl) {
     try {
-      LOGGER.debug("Post about.me api by url = {}", queryUrl);
-      JsonNode response = Utils.parseJson(Unirest.post(queryUrl).asString().getBody().toString());
-      if (response.at("/status").asInt() != STATUS_OK) {
-        LOGGER.error("The query = {} is not success", queryUrl);
-        ((ObjectNode) config).put("failListPath", failListPath);
-        Utils.sureFile(failListPath);
-        Files.write(Paths.get(failListPath), Arrays.asList(queryUrl), StandardCharsets.UTF_8, StandardOpenOption.APPEND);
+      JsonNode response = null;
+      boolean cont = true;
+      while (cont) {
+        LOGGER.debug("Post about.me api by url = {}", queryUrl);
+        response = Utils.parseJson(Unirest.post(queryUrl).asString().getBody().toString());
+        if (response.at("/status").asInt() != STATUS_OK) {
+          LOGGER.error("The query is not success {}", queryUrl);
+          ((ObjectNode) config).put("failListPath", failListPath);
+          Utils.sureFile(failListPath);
+          Files.write(Paths.get(failListPath), Arrays.asList(queryUrl), StandardCharsets.UTF_8, StandardOpenOption.APPEND);
 
-        if (apiErrorTimes++ == 20) {
-          LOGGER.warn("Post to api and get error {} times => Should stop here..", apiErrorTimes);
-          throw new ShouldHaltException("Should stop posting to API here...");
+          if (apiErrorTimes++ > 20) {
+            LOGGER.warn("Post to api and get error {} times => Should stop here..", apiErrorTimes);
+//          throw new ShouldHaltException("Should stop posting to API here...");
+          }
+        }
+        else {
+          cont = false;
         }
       }
       return response;

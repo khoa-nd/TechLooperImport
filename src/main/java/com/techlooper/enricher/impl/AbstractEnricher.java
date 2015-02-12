@@ -13,6 +13,8 @@ import org.slf4j.LoggerFactory;
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 
@@ -52,7 +54,12 @@ public abstract class AbstractEnricher implements Enricher {
       }
       int statusCode = Unirest.post(url).header("Content-Type", "application/json").body(users.toString()).asString().getStatus();
       if (statusCode == HttpServletResponse.SC_NO_CONTENT) {
-        Utils.writeToFile(users, String.format("%s.ok", jsonPath));
+        if (new File(jsonPath).exists()) {
+          Files.move(Paths.get(jsonPath), Paths.get(jsonPath + ".ok"));
+        }
+        else {
+          Utils.writeToFile(users, String.format("%s.ok", jsonPath));
+        }
       }
       else {
         Utils.writeToFile(users, jsonPath);
