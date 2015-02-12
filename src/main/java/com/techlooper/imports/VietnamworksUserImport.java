@@ -42,11 +42,13 @@ public class VietnamworksUserImport {
       Optional<String> vietnamworksUsers = Utils.toJSON(vietnamworksUserRepository.getUsersByResumeId(resumes));
 
       if (vietnamworksUsers.isPresent()) {
-        int result = Utils.postAndGetStatus(enrichUserAPI, vietnamworksUsers.get().replaceAll("skills", "skill"));
+        String jsonUsers = vietnamworksUsers.get().replaceAll("skills", "skill");
+        int result = Utils.postAndGetStatus(enrichUserAPI, jsonUsers);
         if (result == 204) {
           LOGGER.info("Imported user in page #" + pageIndex + " successfully.");
         } else {
           LOGGER.info("Import user in page #" + pageIndex + " fail.");
+          LOGGER.info(jsonUsers);
         }
       }
       pageIndex++;
