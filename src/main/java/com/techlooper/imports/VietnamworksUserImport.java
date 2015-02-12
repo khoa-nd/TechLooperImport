@@ -25,6 +25,7 @@ public class VietnamworksUserImport {
 
   private static VietnamworksUserRepository vietnamworksUserRepository;
 
+
   public static void main(String[] args) throws Throwable {
     SpringApplication app = new SpringApplication(VietnamworksUserImport.class);
     ApplicationContext applicationContext = app.run();
@@ -36,7 +37,7 @@ public class VietnamworksUserImport {
     final int numberOfPages = totalUsers % pageSize == 0 ? totalUsers / pageSize : totalUsers / pageSize + 1;
     int pageIndex = 0;
 
-    while (pageIndex < 2) {
+    while (pageIndex < numberOfPages) {
       List<Long> resumes = vietnamworksUserRepository.getResumeList(pageIndex * pageSize, pageSize);
       Optional<String> vietnamworksUsers = Utils.toJSON(vietnamworksUserRepository.getUsersByResumeId(resumes));
 
@@ -48,6 +49,7 @@ public class VietnamworksUserImport {
           LOGGER.info("Import user in page #" + pageIndex + " fail.");
         }
       }
+      pageIndex++;
     }
   }
 
