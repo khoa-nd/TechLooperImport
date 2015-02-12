@@ -1,16 +1,12 @@
 package com.techlooper.utils;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.mashape.unirest.http.Unirest;
+import com.mashape.unirest.http.exceptions.UnirestException;
 import com.techlooper.pojo.FootPrint;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.ContentType;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.util.EntityUtils;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.ImmutableSettings;
@@ -19,7 +15,6 @@ import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -28,9 +23,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 
@@ -43,22 +36,13 @@ public class Utils {
 
   private static String iioFailsPath = PropertyManager.getProperty("iio.fails");
 
-  public static JsonNode readJson(File file) throws IOException {
-    return new ObjectMapper().readTree(file);
+  public static Optional<String> emptyStringOptional(String str) {
+    return Optional.ofNullable(str).filter( s -> !s.isEmpty());
   }
 
-//  public static FootPrint[] loadFootPrints(String filePath) {
-//    File file = new File(filePath);
-//    if (file.exists()) {
-//      try {
-//        return new ObjectMapper().readValue(file, FootPrint[].class);
-//      }
-//      catch (Exception e) {
-//        LOGGER.error("ERROR", e);
-//      }
-//    }
-//    return new FootPrint[]{};
-//  }
+  public static JsonNode parseJson(File file) throws IOException {
+    return new ObjectMapper().readTree(file);
+  }
 
   public static FootPrint readFootPrint(String filePath) {
     LOGGER.debug("Read foot-print at {}", filePath);
@@ -85,11 +69,11 @@ public class Utils {
       boolean tryAgain = true;
       while (tryAgain) {
         LOGGER.debug("Query using url: " + queryUrl);
-        String content = Utils.postIIOAndReadContent(connectorId, userId, apiKey, queryUrl);
-        JsonNode root = Utils.readIIOResult(content);
+        String content = postIIOAndReadContent(connectorId, userId, apiKey, queryUrl);
+        JsonNode root = readIIOResult(content);
         if (!root.isArray()) {
           LOGGER.debug("Error result => query: {}", queryUrl);
-          String errorText = Optional.ofNullable(Utils.readJson(content).at("/error").asText()).orElse("");
+          String errorText = Optional.ofNullable(parseJson(content).at("/error").asText()).orElse("");
           if (errorText.contains("HTTP 404")) {
             LOGGER.error("HTTP 404 => Break loop query {}", queryUrl);
             break;
@@ -128,31 +112,18 @@ public class Utils {
     }
   }
 
-  public static String postIIOAndReadContent(String connectorId, String userId, String apiKey, String queryUrl) throws UnsupportedEncodingException {
-    return postAndReadContent(String.format("https://api.import.io/store/data/%s/_query?_user=%s&_apikey=%s",
-      connectorId, userId, URLEncoder.encode(apiKey, "UTF-8")), Utils.toIOQueryUrl(queryUrl));
+  public static String postIIOAndReadContent(String connectorId, String userId, String apiKey, String queryUrl) throws UnirestException, UnsupportedEncodingException {
+    String url = String.format("https://api.import.io/store/data/%s/_query?_user=%s&_apikey=%s",
+      connectorId, userId, URLEncoder.encode(apiKey, "UTF-8"));
+    LOGGER.debug("Request IIO by query url {}", queryUrl);
+    queryUrl = JsonNodeFactory.instance.objectNode()
+      .set("input", JsonNodeFactory.instance.objectNode()
+      .put("webpage/url", queryUrl)).toString();
+    return Unirest.post(url).body(new com.mashape.unirest.http.JsonNode(queryUrl)).asString().getBody();
   }
 
-  public static String postAndReadContent(String url, String json) {
-    HttpClient httpClient = HttpClients.createDefault();
-    HttpPost post = new HttpPost(url);
-    post.setEntity(new StringEntity(json, ContentType.create("application/json", "UTF-8")));
-    String content = null;
-    try {
-      HttpResponse response = httpClient.execute(post);
-      content = EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
-    }
-    catch (Exception err) {
-      LOGGER.error("ERROR", err);
-    }
-    return content;
-  }
-
-  public static void sureDirectory(String dirPath) {
-    File dir = new File(dirPath);
-    if (!dir.exists()) {
-      dir.mkdirs();
-    }
+  public static void sureFolder(String... dirPaths) {
+    Arrays.stream(dirPaths).forEach(path -> new File(path).mkdirs());
   }
 
   public static void writeToFile(JsonNode root, String filePath) throws IOException {
@@ -160,24 +131,11 @@ public class Utils {
   }
 
   public static JsonNode readIIOResult(String iioContent) throws IOException {
-    return readJson(iioContent).at("/results");
+    return parseJson(iioContent).at("/results");
   }
 
-  public static String toIOQueryUrl(String queryUrl) {
-    return JsonNodeFactory.instance.objectNode().set("input",
-      JsonNodeFactory.instance.objectNode().put("webpage/url", queryUrl)).toString();
-  }
-
-  public static JsonNode readJson(String json) throws IOException {
+  public static JsonNode parseJson(String json) throws IOException {
     return new ObjectMapper().readTree(json);
-  }
-
-  public static void writeToFile(List<?> list, String filepath) throws IOException {
-    if (list.size() > 0) {
-      final StringBuilder builder = new StringBuilder();
-      list.forEach(usn -> builder.append(",").append("\"").append(usn).append("\""));
-      writeToFile(builder.deleteCharAt(0).insert(0, "[").append("]").toString(), filepath);
-    }
   }
 
   public static Client esClient() {
@@ -190,18 +148,37 @@ public class Utils {
     return client;
   }
 
-  public static int postJsonString(String url, String jsonString) throws IOException {
-    HttpClient httpClient = HttpClients.createDefault();
-    HttpPost post = new HttpPost(url);
-    post.setEntity(new StringEntity(jsonString, ContentType.create("application/json", StandardCharsets.UTF_8)));
-    HttpResponse response = httpClient.execute(post);
-    return response.getStatusLine().getStatusCode();
+  public static int postAndGetStatus(String url, String json) throws IOException, UnirestException {
+    int rsp = Unirest.post(url).header("Content-Type", "application/json").body(json).asString().getStatus();
+    LOGGER.debug("Response code of url {} ", rsp);
+    return rsp;
   }
 
-  public static void writeToFile(String content, String filepath) throws IOException {
-    BufferedWriter writer = Files.newBufferedWriter(Paths.get(filepath), StandardCharsets.UTF_8, StandardOpenOption.CREATE);
-    writer.write(content);
-    writer.close();
+  public static int postAndGetStatus(String url, JsonNode jsonNode) throws IOException, UnirestException {
+    return postAndGetStatus(url, jsonNode.toString());
+  }
+
+  public static void sureFile(String failListPath) throws IOException {
+    File file = new File(failListPath);
+    if (file.exists()) {
+      return;
+    }
+
+    new File(file.getParent()).mkdirs();
+    file.createNewFile();
+  }
+
+  public static <T> Optional<String> toJSON(T object) {
+    final ObjectMapper objectMapper = new ObjectMapper();
+    objectMapper.configure(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT, true);
+    Optional<String> result = Optional.empty();
+    try {
+      result = Optional.ofNullable(objectMapper.writeValueAsString(object));
+    }
+    catch (IOException e) {
+      LOGGER.error(e.getMessage(), e);
+    }
+    return result;
   }
   //    Files.lines(Paths.get(inputFile), StandardCharsets.UTF_8).parallel().forEach(username -> {
 //      try {

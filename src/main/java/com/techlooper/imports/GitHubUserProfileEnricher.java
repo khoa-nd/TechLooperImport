@@ -13,8 +13,6 @@ import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.index.query.FilterBuilder;
 import org.elasticsearch.index.query.FilterBuilders;
-import org.elasticsearch.index.query.NestedFilterBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,11 +64,10 @@ public class GitHubUserProfileEnricher {
 
   private static String iioFailsPath = PropertyManager.getProperty("iio.fails");
 
-  private static FilterBuilder userHasntDescriptionFilterBuilder = FilterBuilders.nestedFilter("profiles",
-    FilterBuilders.notFilter(FilterBuilders.existsFilter("description"))).cache(true);
+  private static FilterBuilder userHasntDescriptionFilterBuilder = FilterBuilders.nestedFilter("profiles", FilterBuilders.notFilter(FilterBuilders.existsFilter("description"))).cache(true);
 
   public static void main(String[] args) throws IOException {
-    Utils.sureDirectory(outputDirectory);
+    Utils.sureFolder(outputDirectory);
     ExecutorService executorService = Executors.newFixedThreadPool(fixedThreadPool);
     if (retry) {
       doRetry(executorService);
@@ -80,7 +77,7 @@ public class GitHubUserProfileEnricher {
       queryES(footPrint, executorService);
     }
     executorService.shutdown();
-
+//    Unirest.shutdown();
     LOGGER.debug("DONE DONE DONE!!!!!");
   }
 
@@ -118,9 +115,8 @@ public class GitHubUserProfileEnricher {
 
   private static void doIIOFailsFiles(ExecutorService executorService) throws IOException {
     ArrayNode jsonUsers = JsonNodeFactory.instance.arrayNode();
-    List<String> queries = Files.readAllLines(Paths.get(iioFailsPath));
     List<String> successQueries = new ArrayList<>();
-    queries.forEach(queryUrl -> {
+    Files.lines(Paths.get(iioFailsPath), StandardCharsets.UTF_8).forEach(queryUrl -> {
       LOGGER.debug("Retry query {}", queryUrl);
       String username = queryUrl.substring(queryUrl.lastIndexOf("/") + 1, queryUrl.length());
       JsonNode usProfile = enrichUserProfile(username);
@@ -151,7 +147,7 @@ public class GitHubUserProfileEnricher {
   private static void asyncPostFile(ExecutorService executorService, File jsonFile) throws IOException {
     String jsonFilePath = jsonFile.getPath();
     LOGGER.debug("Posting file {}", jsonFilePath);
-    ArrayNode jsonUsers = (ArrayNode) Utils.readJson(jsonFile);
+    ArrayNode jsonUsers = (ArrayNode) Utils.parseJson(jsonFile);
     postUsers2API(executorService, jsonFilePath, jsonUsers);
   }
 
@@ -164,7 +160,7 @@ public class GitHubUserProfileEnricher {
     }
 
     File jsonFile = new File(filename);
-    ArrayNode jsonUsers = jsonFile.exists() ? (ArrayNode) Utils.readJson(jsonFile) : crawlUsersProfile(pageNumber, executorService, filename);
+    ArrayNode jsonUsers = jsonFile.exists() ? (ArrayNode) Utils.parseJson(jsonFile) : crawlUsersProfile(pageNumber, executorService, filename);
     if (jsonUsers.size() == 0) {
       return;
     }
@@ -179,7 +175,7 @@ public class GitHubUserProfileEnricher {
     executorService.execute(() -> {
       try {
         LOGGER.debug(">>>>Start posting to api<<<<");
-        int respCode = Utils.postJsonString(enrichUserApi, jsonUsers.toString());
+        int respCode = Utils.postAndGetStatus(enrichUserApi, jsonUsers);
         if (respCode == HttpServletResponse.SC_NO_CONTENT) {
           Files.move(Paths.get(filename), Paths.get(String.format("%s.ok", filename)));
         }

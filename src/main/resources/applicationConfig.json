@@ -1,0 +1,10 @@
+{
+  "fixedThreadPool": 20,
+  "folder": "./json/",
+  "enrichers": [
+    {
+      "configPath": "src/main/resources/aboutme.json",
+      "class": "com.techlooper.enricher.impl.AboutMeEnricher"
+    }
+  ]
+}

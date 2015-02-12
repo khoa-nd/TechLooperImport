@@ -43,12 +43,10 @@ public class GitHubUserCrawler {
 
   private static String userConnectorId = PropertyManager.getProperty("githubUserCrawler.import.io.connector.github");
 
-  private static int fromYear = Integer.parseInt(PropertyManager.getProperty("githubUserCrawler.fromYear"));
-
   private static int fixedThreadPool = Integer.parseInt(PropertyManager.getProperty("fixedThreadPool"));
 
   public static void main(String[] args) throws IOException, InterruptedException, ParseException {
-    Utils.sureDirectory(outputDirectory);
+    Utils.sureFolder(outputDirectory);
 //    final String[] countries = {"vietnam"x, "japan"x, "thailand"x, "singapore"x, "malaysia"x, "indonesia"x, "australia"x, "china"x, "india"x, "korea", "taiwan",
 //      "spain", "ukraine", "poland", "russia", "bulgaria", "turkey", "greece", "serbia", "romania", "belarus", "lithuania", "estonia",
 //      "italy", "portugal", "colombia", "brazil", "chile", "argentina", "venezuela", "bolivia", "mexico"};
@@ -95,7 +93,7 @@ public class GitHubUserCrawler {
     boolean stop = false;
 
     String fromTo = Optional.ofNullable(footPrint.getCrawlers().get(country))
-      .orElse(String.format("2007-01-01..%d-12-31", currentYear));
+      .orElse(String.format("%d-01-01..%d-12-31", 2007, currentYear));
     fromTo = fromTo.split("\\..")[0] + ".." + String.format("%d-12-31", currentYear);
 
     DIVISION div = DIVISION.NOT;
