@@ -3,11 +3,12 @@ package com.techlooper.enricher.impl;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mashape.unirest.http.Unirest;
+import com.mashape.unirest.http.exceptions.UnirestException;
+import com.techlooper.exception.ShouldHaltException;
 import com.techlooper.utils.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -23,6 +24,10 @@ public class AboutMeEnricher extends AbstractEnricher {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(AboutMeEnricher.class);
 
+  public static final int STATUS_OK = 200;
+
+  private int apiErrorTimes = 0;
+
   private void doApiQuery(JsonNode users, String userPath, String apiTerm) {
     StringBuilder builder = new StringBuilder();
     users.forEach((user) -> {
@@ -34,7 +39,7 @@ public class AboutMeEnricher extends AbstractEnricher {
     });
     builder.deleteCharAt(0);
 
-    consumeApiResponse(doApiQuery(apiTerm, builder.toString()), config.at("/userQuery/from").asInt() + ".es");
+    consumeApiResponse(doApiQuery(apiTerm, builder.toString()), config.at("/userQuery/query/from").asInt() + ".es");
   }
 
   private void consumeApiResponse(JsonNode response, String source) {
@@ -47,7 +52,7 @@ public class AboutMeEnricher extends AbstractEnricher {
     String filePath = String.format("%s%s.json", apiFolder, source);
     try {
       Utils.writeToFile(users, filePath);
-      LOGGER.debug("Consume fail users => write to file", filePath);
+      LOGGER.warn("Consume fail users => write to file = {}", filePath);
     }
     catch (IOException e) {
       LOGGER.error("ERROR", e);
@@ -60,6 +65,9 @@ public class AboutMeEnricher extends AbstractEnricher {
       found.at("/profiles").forEach(this::refineEnrichUser);
       postTechlooper(source, found.at("/profiles"));
     }
+    else {
+      LOGGER.warn("No user found on AboutMe with source = {}", source);
+    }
 
     JsonNode notFound = response.at("/result/not_found");
     if (notFound.at("/total_count").asInt() > 0) {
@@ -69,7 +77,8 @@ public class AboutMeEnricher extends AbstractEnricher {
   }
 
   public void retryFailApi(Integer lineIndex, String queryUrl) {
-    consumeApiResponse(postApi(queryUrl), lineIndex + ".api.");
+    String failListName = Paths.get(config.get("failListPath").asText()).getFileName().toString();
+    consumeApiResponse(postApi(queryUrl), String.format("%d.%s", lineIndex, failListName));
   }
 
   private void refineEnrichUser(JsonNode user) {
@@ -92,18 +101,26 @@ public class AboutMeEnricher extends AbstractEnricher {
 
   private JsonNode postApi(String queryUrl) {
     try {
-      LOGGER.debug("Post about.me api by url {}", queryUrl);
+      LOGGER.debug("Post about.me api by url = {}", queryUrl);
       JsonNode response = Utils.parseJson(Unirest.post(queryUrl).asString().getBody().toString());
-      if (response.at("/status").asInt() != HttpServletResponse.SC_OK) {
-        LOGGER.debug("The query {} is not success", queryUrl);
+      if (response.at("/status").asInt() != STATUS_OK) {
+        LOGGER.error("The query = {} is not success", queryUrl);
         ((ObjectNode) config).put("failListPath", failListPath);
+        Utils.sureFile(failListPath);
         Files.write(Paths.get(failListPath), Arrays.asList(queryUrl), StandardCharsets.UTF_8, StandardOpenOption.APPEND);
-        return null;
+
+        if (apiErrorTimes++ == 20) {
+          LOGGER.warn("Post to api and get error {} times => Should stop here..", apiErrorTimes);
+          throw new ShouldHaltException("Should stop posting to API here...");
+        }
       }
       return response;
     }
-    catch (Exception e) {
-      LOGGER.debug("Error post to api {}", queryUrl);
+    catch (IOException e) {
+      LOGGER.error("Error post to api , queryUrl = {}", queryUrl, e);
+    }
+    catch (UnirestException e) {
+      LOGGER.error("Error post to api , queryUrl = {}", queryUrl, e);
     }
     return null;
   }

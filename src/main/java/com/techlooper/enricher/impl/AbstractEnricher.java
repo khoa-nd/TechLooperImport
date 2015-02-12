@@ -27,6 +27,8 @@ public abstract class AbstractEnricher implements Enricher {
 
   protected String folder;
 
+  protected String ioFolder;
+
   protected String failListPath;
 
   protected JsonNode config;
@@ -57,7 +59,7 @@ public abstract class AbstractEnricher implements Enricher {
       }
     }
     catch (Exception e) {
-      LOGGER.error("Not post to {}, error: {}", url, e);
+      LOGGER.error("Not post to url = {}, error= {}", url, e);
       try {
         Utils.writeToFile(users, jsonPath);
       }
@@ -85,11 +87,16 @@ public abstract class AbstractEnricher implements Enricher {
 
   private void prepareProperties() {
     folder = this.appConfig.get("folder").asText();
-    failListPath = String.format("%s%s.txt", folder, dateTimeFormatter.print(DateTime.now()));
+    ioFolder = folder + config.get("folderName").asText();
+    failListPath = String.format("%s%s.txt", ioFolder, dateTimeFormatter.print(DateTime.now()));
 
-    techlooperFolder = folder + config.at("/techlooper/folderName").asText();
-    apiFolder = folder + config.at("/api/folderName").asText();
+    techlooperFolder = ioFolder + config.at("/techlooper/folderName").asText();
+    apiFolder = ioFolder + config.at("/api/folderName").asText();
     Utils.sureFolder(techlooperFolder, apiFolder);
+  }
+
+  public String getTechlooperFolder() {
+    return techlooperFolder;
   }
 
   public JsonNode getConfig() {

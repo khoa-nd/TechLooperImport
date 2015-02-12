@@ -1,7 +1,8 @@
 {
+  "folderName": "aboutme/",
   "techlooper": {
-    "apiUrl": "http://172.17.2.89:8080/techlooper/api/users/addAll",
-    "folderName": "aboutme/techlooper/",
+    "apiUrl": "http://localhost:8080/techlooper/api/users/addAll",
+    "folderName": "techlooper/",
     "mapper": [
       {
         "from": "user_name",
@@ -18,8 +19,8 @@
     ]
   },
   "api": {
-    "folderName": "aboutme/api/",
-    "userSearchUrl": "https://api.about.me/api/v2/json/users/search/?client_id=a9200967b7b649f27148892a037b519bc974c90b&show_not_found=true&%s"
+    "folderName": "api/",
+    "userSearchUrl": "https://api.about.me/api/v2/json/users/search/?client_id=166a01e3cb8884ef28d8b56ae7f8965ef64691c8&show_not_found=true&%s"
   },
   "userCountQuery": {
     "url": "http://es-staging.vietnamworks.com/techlooper/user/_search?search_type=count",
@@ -31,13 +32,14 @@
     "username": "es",
     "password": "naviSt@ging",
     "query": {
-      "from": 0,
-      "size": 100,
+      "from": 185400,
+      "size": 300,
       "fields": [
         "profiles.GITHUB.username",
         "profiles.GITHUB.email",
         "profiles.GITHUB.fullname"
       ]
     }
-  }
+  },
+  "failListPath": "./json/aboutme/20150212132825.txt"
 }

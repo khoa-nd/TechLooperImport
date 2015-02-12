@@ -9,8 +9,10 @@ import static ch.qos.logback.classic.Level.*
 scan()
 
 appender("CONSOLE", ConsoleAppender) {
+  withJansi = true
   encoder(PatternLayoutEncoder) {
-    pattern = "%d{dd-MM-yyyy HH:mm:ss.SSS} %p [%t] %c{1}: %m%n"
+//    pattern = "%d{dd-MM-yyyy HH:mm:ss.SSS} %p [%t] %c{1}: %m%n"
+    pattern = "[%t] %d{yyyyMMdd HH:mm:ss.SSS} %highlight(%-5level) %cyan(%logger{15}) - %msg %n"
   }
 }
 

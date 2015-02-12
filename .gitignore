@@ -5,3 +5,6 @@ target
 *.iml
 *.class
 *.log
+json/
+bk/
+*.ok

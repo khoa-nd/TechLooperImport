@@ -63,5 +63,6 @@ public class RetryManager {
 
     logger.debug("Done file {}", failListPath);
     ((ObjectNode) config).remove("failListPath");
+    Files.move(Paths.get(failListPath), Paths.get(doneFilePath));
   }
 }
