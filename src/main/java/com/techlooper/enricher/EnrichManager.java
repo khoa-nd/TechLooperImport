@@ -2,8 +2,8 @@ package com.techlooper.enricher;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.mashape.unirest.http.exceptions.UnirestException;
-import com.techlooper.manager.RetryManager;
 import com.techlooper.service.ElasticSearchService;
+import com.techlooper.service.RetryService;
 import com.techlooper.utils.PropertyManager;
 import com.techlooper.utils.Utils;
 import org.slf4j.Logger;
@@ -83,7 +83,7 @@ public class EnrichManager {
 
   private static void retryFromLastPrint(Enricher eInstance, JsonNode eConfig) throws IOException {
     LOGGER.debug("Retry from last print >>");
-    RetryManager retryManager = new RetryManager(eConfig, LOGGER);
+    RetryService retryManager = new RetryService(eConfig, LOGGER);
     retryManager.fromFile(eInstance.getTechlooperFolder(), ".json", (path, jsonNode) -> eInstance.postTechlooper(path.toString(), jsonNode));
     retryManager.fromFailList((index, queryUrl) -> eInstance.retryFailApi(index, queryUrl));
   }
