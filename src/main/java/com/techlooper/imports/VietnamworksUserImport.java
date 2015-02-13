@@ -27,9 +27,9 @@ public class VietnamworksUserImport {
     String enrichUserAPI = applicationContext.getEnvironment().getProperty("githubUserProfileEnricher.techlooper.api.enrichUser");
 
     final int totalUsers = vietnamworksUserRepository.getTotalUser();
-    final int pageSize = 10;
+    final int pageSize = 5;
     final int numberOfPages = totalUsers % pageSize == 0 ? totalUsers / pageSize : totalUsers / pageSize + 1;
-    int pageIndex = 0;
+    int pageIndex = 12500;
 
     while (pageIndex < numberOfPages) {
       List<Long> resumes = vietnamworksUserRepository.getResumeList(pageIndex * pageSize, pageSize);
