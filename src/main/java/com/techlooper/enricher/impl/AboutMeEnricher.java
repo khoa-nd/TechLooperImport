@@ -31,7 +31,7 @@ public class AboutMeEnricher extends AbstractEnricher {
   private void doApiQuery(JsonNode users, String userPath, String apiTerm) {
     StringBuilder builder = new StringBuilder();
     users.forEach((user) -> {
-      JsonNode field = user.at(userPath).get(0);
+      JsonNode field = user.at(userPath);
       Optional.ofNullable(field).ifPresent(f -> {
         String text = field.asText();
         builder.append(",").append(text);
@@ -132,9 +132,9 @@ public class AboutMeEnricher extends AbstractEnricher {
     return null;
   }
 
+  //TODO: handle no user found by email => choose other data to query
   public void consumeESUsers(JsonNode users) {
     LOGGER.debug("Consume elastic search users");
-    doApiQuery(users, "/fields/profiles.GITHUB.email", "email");
+    doApiQuery(users, "/_id", "email");
   }
-
 }

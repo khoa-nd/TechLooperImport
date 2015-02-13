@@ -86,5 +86,6 @@ public class EnrichManager {
     RetryService retryManager = new RetryService(eConfig, LOGGER);
     retryManager.fromFile(eInstance.getTechlooperFolder(), ".json", (path, jsonNode) -> eInstance.postTechlooper(path.toString(), jsonNode));
     retryManager.fromFailList((index, queryUrl) -> eInstance.retryFailApi(index, queryUrl));
+    LOGGER.debug("<< Done retry");
   }
 }
