@@ -1,0 +1,32 @@
+{
+    "comment": {
+        "header": "We can search on About.me like below url :",
+        "urlExample": "https://api.about.me/api/v2/json/users/search/?client_id=a9200967b7b649f27148892a037b519bc974c90b&email=me%40me.me%2Chamedshayan%40gmail.com&show_not_found=true&requestid=request123",
+        "responseSample": {
+            "status": 200,
+            "result": {
+                "found": {
+                    "total_count": 1,
+                    "total_available": 1,
+                    "profiles": [
+                        {
+                            "profile": "http://about.me/chrisshayan",
+                            "bio": "Growth hacker, software architect and loud-mouth on the design and development of enterprise softwares",
+                            "email_address": "hamedshayan@gmail.com",
+                            "user_name": "chrisshayan",
+                            "display_name": "Chris Shayan"
+                        }
+                    ]
+                },
+                "not_found": {
+                    "unknown": [
+                        "me@me.me"
+                    ],
+                    "total_available": 1,
+                    "total_count": 1
+                }
+            },
+            "requestid": "request123"
+        }
+    }
+}

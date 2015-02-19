@@ -1,0 +1,25 @@
+{
+  "userExtractor": {
+    "userId": "4c46b4b2-e818-4462-bf47-bf89165c3ace",
+    "apiKey": "CZs+sxsZFF/u3dBPO6Y+yYww1AWBRbIM20cWB5f0HXhcgGl36PmpjzRgwmcDA6eSUMkWmRQ9CiNIwGK2vfuWqg==",
+    "connectorId": "26f3008f-7aea-4819-8eae-3cfbb86af2c1",
+    "query": "https://github.com/%s"
+  },
+  "techlooper": {
+    "apiUrl": "http://techlooper.com/api/users/addAll"
+  },
+  "userCountQuery": {
+    "url": "http://es-staging.vietnamworks.com/techlooper/user/_search?search_type=count",
+    "username": "es",
+    "password": "naviSt@ging"
+  },
+  "userQuery": {
+    "url": "http://es-staging.vietnamworks.com/techlooper/user/_search",
+    "username": "es",
+    "password": "naviSt@ging",
+    "query": {
+      "from": 0,
+      "size": 100
+    }
+  }
+}
