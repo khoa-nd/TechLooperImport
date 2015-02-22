@@ -5,7 +5,7 @@ package com.techlooper.exception;
  */
 public class InitializationException extends RuntimeException {
 
-  public InitializationException(String error) {
-    super(error);
-  }
+    public InitializationException(String error) {
+        super(error);
+    }
 }

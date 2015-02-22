@@ -1,7 +1,6 @@
 package com.techlooper.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.techlooper.utils.Utils;
 import org.slf4j.Logger;
 
 /**
@@ -9,21 +8,21 @@ import org.slf4j.Logger;
  */
 public class ImportIOService {
 
-  private JsonNode config;
+    private JsonNode config;
 
-  private Logger logger;
+    private Logger logger;
 
-  public ImportIOService(JsonNode config, Logger logger) {
-    this.config = config;
-    this.logger = logger;
-  }
+    public ImportIOService(JsonNode config, Logger logger) {
+        this.config = config;
+        this.logger = logger;
+    }
 
-  public JsonNode doCrawler(String configPath) {
-    logger.debug("Do crawler using configPath {}", configPath);
-    JsonNode iio = config.at(configPath);
+    public JsonNode doCrawler(String configPath) {
+        logger.debug("Do crawler using configPath {}", configPath);
+        JsonNode iio = config.at(configPath);
 //    Utils.doIIOQuery(iio.get());
 
-    return null;
-  }
+        return null;
+    }
 
 }

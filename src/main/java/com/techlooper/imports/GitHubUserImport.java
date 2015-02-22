@@ -25,80 +25,76 @@ import java.util.concurrent.Executors;
  */
 public class GitHubUserImport {
 
-  private static Logger LOGGER = LoggerFactory.getLogger(GitHubUserImport.class);
+    private static Logger LOGGER = LoggerFactory.getLogger(GitHubUserImport.class);
 
-  private static String inputDirectory = PropertyManager.getProperty("githubUserImport.inputDirectory");
+    private static String inputDirectory = PropertyManager.getProperty("githubUserImport.inputDirectory");
 
-  private static String addUserApi = PropertyManager.getProperty("githubUserImport.techlooper.api.addUser");
+    private static String addUserApi = PropertyManager.getProperty("githubUserImport.techlooper.api.addUser");
 
-  private static String esIndex = PropertyManager.getProperty("githubUserImport.es.index");
+    private static String esIndex = PropertyManager.getProperty("githubUserImport.es.index");
 
-  private static int fixedThreadPool = Integer.parseInt(PropertyManager.getProperty("fixedThreadPool"));
+    private static int fixedThreadPool = Integer.parseInt(PropertyManager.getProperty("fixedThreadPool"));
 
-  public static void main(String[] args) throws IOException {
-    ExecutorService executorService = Executors.newFixedThreadPool(fixedThreadPool);
-    Files.walk(Paths.get(inputDirectory), FileVisitOption.FOLLOW_LINKS).filter(path -> path.toString().endsWith(".json")).parallel().forEach(filePath -> {
-      if (Files.isRegularFile(filePath)) {
-        sendFile(filePath, executorService);
-      }
-    });
-    executorService.shutdown();
-    LOGGER.debug("DONE DONE DONE!!!!!");
-  }
+    public static void main(String[] args) throws IOException {
+        ExecutorService executorService = Executors.newFixedThreadPool(fixedThreadPool);
+        Files.walk(Paths.get(inputDirectory), FileVisitOption.FOLLOW_LINKS).filter(path -> path.toString().endsWith(".json")).parallel().forEach(filePath -> {
+            if (Files.isRegularFile(filePath)) {
+                sendFile(filePath, executorService);
+            }
+        });
+        executorService.shutdown();
+        LOGGER.debug("DONE DONE DONE!!!!!");
+    }
 
-  private static void sendFile(Path filePath, ExecutorService executorService) {
-    LOGGER.debug("Reading file {}", filePath);
-    try {
-      StringBuilder builder = new StringBuilder();
-      Files.readAllLines(filePath, StandardCharsets.UTF_8).forEach(builder::append);
-      JsonNode users = Utils.parseJson(builder.toString());
-      users.forEach(user -> {
-        ObjectNode node = (ObjectNode) user;
-        node.put("crawlersource", "GITHUB");
-        node.put("imageurl", node.get("image_url").asText());
-        node.put("fullname", node.get("image_url/_alt").asText());
-
-        node.remove("image_url");
-        node.remove("image_url/_alt");
-        node.remove("datejoin");
-      });
-
-      executorService.execute(() -> {
+    private static void sendFile(Path filePath, ExecutorService executorService) {
+        LOGGER.debug("Reading file {}", filePath);
         try {
-          LOGGER.debug(">>>>Start posting to api<<<<");
-          int rspCode = Utils.postAndGetStatus(addUserApi, users);
-          if (rspCode == HttpServletResponse.SC_NO_CONTENT) {
-            Files.move(filePath, Paths.get(filePath.toString() + ".ok"));
-          }
-          else if (rspCode == HttpServletResponse.SC_NOT_ACCEPTABLE) {//no update
-            Files.move(filePath, Paths.get(filePath.toString() + ".ignore"));
-          }
-          else {
-            LOGGER.error("Error calling to api, error code: {} (>_<)", rspCode);
-          }
-        }
-        catch (Exception e) {
-          LOGGER.error("Error file {}, ex: ", filePath, e);
-        }
-        LOGGER.debug(">>>>Done posting to api<<<<");
-      });
-    }
-    catch (Exception e) {
-      LOGGER.error("Error when processing file {}, ex: ", filePath, e);
-    }
-  }
+            StringBuilder builder = new StringBuilder();
+            Files.readAllLines(filePath, StandardCharsets.UTF_8).forEach(builder::append);
+            JsonNode users = Utils.parseJson(builder.toString());
+            users.forEach(user -> {
+                ObjectNode node = (ObjectNode) user;
+                node.put("crawlersource", "GITHUB");
+                node.put("imageurl", node.get("image_url").asText());
+                node.put("fullname", node.get("image_url/_alt").asText());
 
-  private static boolean exist(String username) {
-    Client client = Utils.esClient();
+                node.remove("image_url");
+                node.remove("image_url/_alt");
+                node.remove("datejoin");
+            });
+
+            executorService.execute(() -> {
+                try {
+                    LOGGER.debug(">>>>Start posting to api<<<<");
+                    int rspCode = Utils.postAndGetStatus(addUserApi, users);
+                    if (rspCode == HttpServletResponse.SC_NO_CONTENT) {
+                        Files.move(filePath, Paths.get(filePath.toString() + ".ok"));
+                    } else if (rspCode == HttpServletResponse.SC_NOT_ACCEPTABLE) {//no update
+                        Files.move(filePath, Paths.get(filePath.toString() + ".ignore"));
+                    } else {
+                        LOGGER.error("Error calling to api, error code: {} (>_<)", rspCode);
+                    }
+                } catch (Exception e) {
+                    LOGGER.error("Error file {}, ex: ", filePath, e);
+                }
+                LOGGER.debug(">>>>Done posting to api<<<<");
+            });
+        } catch (Exception e) {
+            LOGGER.error("Error when processing file {}, ex: ", filePath, e);
+        }
+    }
+
+    private static boolean exist(String username) {
+        Client client = Utils.esClient();
 
 //    QUery
 
-    SearchResponse response = client.prepareSearch(esIndex).setSearchType(SearchType.COUNT)
-                                .execute().actionGet();
+        SearchResponse response = client.prepareSearch(esIndex).setSearchType(SearchType.COUNT)
+                .execute().actionGet();
 
 
-    client.close();
+        client.close();
 
-    return false;
-  }
+        return false;
+    }
 }
