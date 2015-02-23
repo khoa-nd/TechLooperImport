@@ -1,94 +1,94 @@
 {
-    "comment": {
-        "moreInfo" : "https://api.stackexchange.com/docs/search",
-        "header": "We can search on Stackoverflow by name like below url :",
-        "urlExample": "/2.2/users?order=desc&sort=reputation&inname=William Jockusch&site=stackoverflow",
-        "responseSample": {
-            "items": [
-                {
-                    "badge_counts": {
-                        "bronze": 190,
-                        "silver": 97,
-                        "gold": 23
-                    },
-                    "account_id": 89342,
-                    "is_employee": false,
-                    "last_modified_date": 1421465364,
-                    "last_access_date": 1423196163,
-                    "reputation_change_year": -133,
-                    "reputation_change_quarter": -133,
-                    "reputation_change_month": 43,
-                    "reputation_change_week": 43,
-                    "reputation_change_day": -2,
-                    "reputation": 9709,
-                    "creation_date": 1262970496,
-                    "user_type": "registered",
-                    "user_id": 246568,
-                    "accept_rate": 67,
-                    "website_url": "https://play.google.com/store/apps/details?id=com.jockusch.freegraphingcalculator",
-                    "link": "http://stackoverflow.com/users/246568/william-jockusch",
-                    "display_name": "William Jockusch",
-                    "profile_image": "https://www.gravatar.com/avatar/6a62c6e7acd47259151ba488eb6a17e3?s=128&d=identicon&r=PG"
-                },
-                {
-                    "badge_counts": {
-                        "bronze": 0,
-                        "silver": 0,
-                        "gold": 0
-                    },
-                    "account_id": 583583,
-                    "is_employee": false,
-                    "last_modified_date": 1332303250,
-                    "last_access_date": 1265677500,
-                    "reputation_change_year": 0,
-                    "reputation_change_quarter": 0,
-                    "reputation_change_month": 0,
-                    "reputation_change_week": 0,
-                    "reputation_change_day": 0,
-                    "reputation": 1,
-                    "creation_date": 1264039159,
-                    "user_type": "unregistered",
-                    "user_id": 255420,
-                    "link": "http://stackoverflow.com/users/255420/william-jockusch",
-                    "display_name": "William Jockusch",
-                    "profile_image": "https://www.gravatar.com/avatar/6a62c6e7acd47259151ba488eb6a17e3?s=128&d=identicon&r=PG"
-                }
-            ],
-            "has_more": false,
-            "quota_max": 10000,
-            "quota_remaining": 9991
-        }
-    },         "header": "We can search on Stackoverflow by username like below url :",
-    "urlExample": "/2.2/users?order=desc&sort=reputation&inname= user2924156&site=stackoverflow",
+  "comment": {
+    "moreInfo": "https://api.stackexchange.com/docs/search",
+    "header": "We can search on Stackoverflow by name like below url :",
+    "urlExample": "/2.2/users?order=desc&sort=reputation&inname=William Jockusch&site=stackoverflow",
     "responseSample": {
-        "items": [
-            {
-                "badge_counts": {
-                    "bronze": 2,
-                    "silver": 0,
-                    "gold": 0
-                },
-                "account_id": 3495941,
-                "is_employee": false,
-                "last_modified_date": 1423181118,
-                "last_access_date": 1423197473,
-                "reputation_change_year": 0,
-                "reputation_change_quarter": 0,
-                "reputation_change_month": 0,
-                "reputation_change_week": 0,
-                "reputation_change_day": 0,
-                "reputation": 11,
-                "creation_date": 1382835416,
-                "user_type": "registered",
-                "user_id": 2924156,
-                "link": "http://stackoverflow.com/users/2924156/user2924156",
-                "display_name": "user2924156",
-                "profile_image": "https://www.gravatar.com/avatar/562643fd978c63a5b8195e7dc4d8beae?s=128&d=identicon&r=PG&f=1"
-            }
-        ],
-        "has_more": false,
-        "quota_max": 10000,
-        "quota_remaining": 9990
+      "items": [
+        {
+          "badge_counts": {
+            "bronze": 190,
+            "silver": 97,
+            "gold": 23
+          },
+          "account_id": 89342,
+          "is_employee": false,
+          "last_modified_date": 1421465364,
+          "last_access_date": 1423196163,
+          "reputation_change_year": -133,
+          "reputation_change_quarter": -133,
+          "reputation_change_month": 43,
+          "reputation_change_week": 43,
+          "reputation_change_day": -2,
+          "reputation": 9709,
+          "creation_date": 1262970496,
+          "user_type": "registered",
+          "user_id": 246568,
+          "accept_rate": 67,
+          "website_url": "https://play.google.com/store/apps/details?id=com.jockusch.freegraphingcalculator",
+          "link": "http://stackoverflow.com/users/246568/william-jockusch",
+          "display_name": "William Jockusch",
+          "profile_image": "https://www.gravatar.com/avatar/6a62c6e7acd47259151ba488eb6a17e3?s=128&d=identicon&r=PG"
+        },
+        {
+          "badge_counts": {
+            "bronze": 0,
+            "silver": 0,
+            "gold": 0
+          },
+          "account_id": 583583,
+          "is_employee": false,
+          "last_modified_date": 1332303250,
+          "last_access_date": 1265677500,
+          "reputation_change_year": 0,
+          "reputation_change_quarter": 0,
+          "reputation_change_month": 0,
+          "reputation_change_week": 0,
+          "reputation_change_day": 0,
+          "reputation": 1,
+          "creation_date": 1264039159,
+          "user_type": "unregistered",
+          "user_id": 255420,
+          "link": "http://stackoverflow.com/users/255420/william-jockusch",
+          "display_name": "William Jockusch",
+          "profile_image": "https://www.gravatar.com/avatar/6a62c6e7acd47259151ba488eb6a17e3?s=128&d=identicon&r=PG"
+        }
+      ],
+      "has_more": false,
+      "quota_max": 10000,
+      "quota_remaining": 9991
     }
-
+  },
+  "header": "We can search on Stackoverflow by username like below url :",
+  "urlExample": "/2.2/users?order=desc&sort=reputation&inname= user2924156&site=stackoverflow",
+  "responseSample": {
+    "items": [
+      {
+        "badge_counts": {
+          "bronze": 2,
+          "silver": 0,
+          "gold": 0
+        },
+        "account_id": 3495941,
+        "is_employee": false,
+        "last_modified_date": 1423181118,
+        "last_access_date": 1423197473,
+        "reputation_change_year": 0,
+        "reputation_change_quarter": 0,
+        "reputation_change_month": 0,
+        "reputation_change_week": 0,
+        "reputation_change_day": 0,
+        "reputation": 11,
+        "creation_date": 1382835416,
+        "user_type": "registered",
+        "user_id": 2924156,
+        "link": "http://stackoverflow.com/users/2924156/user2924156",
+        "display_name": "user2924156",
+        "profile_image": "https://www.gravatar.com/avatar/562643fd978c63a5b8195e7dc4d8beae?s=128&d=identicon&r=PG&f=1"
+      }
+    ],
+    "has_more": false,
+    "quota_max": 10000,
+    "quota_remaining": 9990
+  }
 }

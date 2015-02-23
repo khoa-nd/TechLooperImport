@@ -12,7 +12,7 @@ public class JobStreetCrawlerTest {
     @Ignore("No Need to test for now")
     public void testCrawl() throws Exception {
         JobStreetCrawler crawler = new JobStreetCrawler();
-        for(int counter = 200; counter < 229; counter++) {
+        for (int counter = 200; counter < 229; counter++) {
             crawler.crawl(counter);
         }
     }

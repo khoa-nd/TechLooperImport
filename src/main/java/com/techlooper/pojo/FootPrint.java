@@ -11,60 +11,60 @@ import java.util.Map;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class FootPrint {
 
-  private Integer lastPageNumber = 0;
+    private Integer lastPageNumber = 0;
 
-  private Map<String, String> crawlers = new HashMap<>();
+    private Map<String, String> crawlers = new HashMap<>();
 
-  public Integer getLastPageNumber() {
-    return lastPageNumber;
-  }
-
-  public void setLastPageNumber(Integer lastPageNumber) {
-    this.lastPageNumber = lastPageNumber;
-  }
-
-  public Map<String, String> getCrawlers() {
-    return crawlers;
-  }
-
-  public void setCrawlers(Map<String, String> crawlers) {
-    this.crawlers = crawlers;
-  }
-
-  public static class FootPrintBuilder {
-    private FootPrint footPrint;
-
-    public FootPrintBuilder withCrawler(String country, String fromTo) {
-      footPrint.crawlers.put(country, fromTo);
-      return this;
+    public Integer getLastPageNumber() {
+        return lastPageNumber;
     }
 
-    public static FootPrintBuilder footPrint(FootPrint footPrint) {
-      FootPrintBuilder builder = new FootPrintBuilder();
-      builder.footPrint = footPrint;
-      return builder;
+    public void setLastPageNumber(Integer lastPageNumber) {
+        this.lastPageNumber = lastPageNumber;
     }
 
-    private FootPrintBuilder() {
-      footPrint = new FootPrint();
+    public Map<String, String> getCrawlers() {
+        return crawlers;
     }
 
-    public FootPrintBuilder withLastPageNumber(Integer lastPageNumber) {
-      footPrint.lastPageNumber = lastPageNumber;
-      return this;
+    public void setCrawlers(Map<String, String> crawlers) {
+        this.crawlers = crawlers;
     }
 
-    public FootPrintBuilder withCrawlers(Map<String, String> crawlers) {
-      footPrint.crawlers = crawlers;
-      return this;
-    }
+    public static class FootPrintBuilder {
+        private FootPrint footPrint;
 
-    public static FootPrintBuilder footPrint() {
-      return new FootPrintBuilder();
-    }
+        public FootPrintBuilder withCrawler(String country, String fromTo) {
+            footPrint.crawlers.put(country, fromTo);
+            return this;
+        }
 
-    public FootPrint build() {
-      return footPrint;
+        public static FootPrintBuilder footPrint(FootPrint footPrint) {
+            FootPrintBuilder builder = new FootPrintBuilder();
+            builder.footPrint = footPrint;
+            return builder;
+        }
+
+        private FootPrintBuilder() {
+            footPrint = new FootPrint();
+        }
+
+        public FootPrintBuilder withLastPageNumber(Integer lastPageNumber) {
+            footPrint.lastPageNumber = lastPageNumber;
+            return this;
+        }
+
+        public FootPrintBuilder withCrawlers(Map<String, String> crawlers) {
+            footPrint.crawlers = crawlers;
+            return this;
+        }
+
+        public static FootPrintBuilder footPrint() {
+            return new FootPrintBuilder();
+        }
+
+        public FootPrint build() {
+            return footPrint;
+        }
     }
-  }
 }

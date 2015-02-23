@@ -17,27 +17,27 @@ import java.util.Map;
 @Repository("vietnamworksUserRepository")
 public class VietnamworksUserRepository {
 
-  @Resource
-  private JdbcTemplate jdbcTemplate;
+    @Resource
+    private JdbcTemplate jdbcTemplate;
 
-  private final String resumeSqlQuery = "select r.* from tblresume r inner join tblregistrationinfo i on r.userid = i.userid where resumeid in (:resumeIds) and i.isactive = 1";
-  private final String totalUserSqlQuery = "select count(distinct resumeid) from tblresume_industry where industryid = 35";
-  private final String getResumeListSqlQuery = "select resumeid from tblresume_industry where industryid = 35 limit ?, ?";
+    private final String resumeSqlQuery = "select r.* from tblresume r inner join tblregistrationinfo i on r.userid = i.userid where resumeid in (:resumeIds) and i.isactive = 1";
+    private final String totalUserSqlQuery = "select count(distinct resumeid) from tblresume_industry where industryid = 35";
+    private final String getResumeListSqlQuery = "select resumeid from tblresume_industry where industryid = 35 limit ?, ?";
 
-  public int getTotalUser() {
-    return jdbcTemplate.queryForInt(totalUserSqlQuery);
-  }
+    public int getTotalUser() {
+        return jdbcTemplate.queryForInt(totalUserSqlQuery);
+    }
 
-  public List<Long> getResumeList(int fromIndex, int pageSize) {
-    return jdbcTemplate.queryForList(getResumeListSqlQuery, Long.class, fromIndex, pageSize);
-  }
+    public List<Long> getResumeList(int fromIndex, int pageSize) {
+        return jdbcTemplate.queryForList(getResumeListSqlQuery, Long.class, fromIndex, pageSize);
+    }
 
-  public List<VietnamworksUser> getUsersByResumeId(List<Long> resumeIds) {
-    NamedParameterJdbcTemplate namedParameterJdbcTemplate = new NamedParameterJdbcTemplate(jdbcTemplate);
-    Map<String, Object> parameterMap = new HashMap<String, Object>();
-    parameterMap.put("resumeIds", resumeIds);
-    return namedParameterJdbcTemplate.query(resumeSqlQuery, parameterMap,
-            new BeanPropertyRowMapper<VietnamworksUser>(VietnamworksUser.class));
-  }
+    public List<VietnamworksUser> getUsersByResumeId(List<Long> resumeIds) {
+        NamedParameterJdbcTemplate namedParameterJdbcTemplate = new NamedParameterJdbcTemplate(jdbcTemplate);
+        Map<String, Object> parameterMap = new HashMap<String, Object>();
+        parameterMap.put("resumeIds", resumeIds);
+        return namedParameterJdbcTemplate.query(resumeSqlQuery, parameterMap,
+                new BeanPropertyRowMapper<VietnamworksUser>(VietnamworksUser.class));
+    }
 
 }

@@ -16,38 +16,37 @@ import java.util.Optional;
  */
 public class VietnamworksUserImport {
 
-  private static Logger LOGGER = LoggerFactory.getLogger(VietnamworksUserImport.class);
+    private static Logger LOGGER = LoggerFactory.getLogger(VietnamworksUserImport.class);
 
-  private static VietnamworksUserRepository vietnamworksUserRepository;
+    private static VietnamworksUserRepository vietnamworksUserRepository;
 
 
-  public static void main(String[] args) throws Throwable {
-    ApplicationContext applicationContext = new AnnotationConfigApplicationContext(VietnamworksDatabaseConfiguration.class);
-    vietnamworksUserRepository = applicationContext.getBean("vietnamworksUserRepository", VietnamworksUserRepository.class);
-    String enrichUserAPI = applicationContext.getEnvironment().getProperty("githubUserProfileEnricher.techlooper.api.enrichUser");
+    public static void main(String[] args) throws Throwable {
+        ApplicationContext applicationContext = new AnnotationConfigApplicationContext(VietnamworksDatabaseConfiguration.class);
+        vietnamworksUserRepository = applicationContext.getBean("vietnamworksUserRepository", VietnamworksUserRepository.class);
+        String enrichUserAPI = applicationContext.getEnvironment().getProperty("githubUserProfileEnricher.techlooper.api.enrichUser");
 
-    final int totalUsers = vietnamworksUserRepository.getTotalUser();
-    final int pageSize = 1;
-    final int numberOfPages = totalUsers % pageSize == 0 ? totalUsers / pageSize : totalUsers / pageSize + 1;
-    int pageIndex = 0;
+        final int totalUsers = vietnamworksUserRepository.getTotalUser();
+        final int pageSize = 1;
+        final int numberOfPages = totalUsers % pageSize == 0 ? totalUsers / pageSize : totalUsers / pageSize + 1;
+        int pageIndex = 0;
 
-    while (pageIndex < numberOfPages) {
-      List<Long> resumes = vietnamworksUserRepository.getResumeList(pageIndex * pageSize, pageSize);
-      Optional<String> vietnamworksUsers = Utils.toJSON(vietnamworksUserRepository.getUsersByResumeId(resumes));
+        while (pageIndex < numberOfPages) {
+            List<Long> resumes = vietnamworksUserRepository.getResumeList(pageIndex * pageSize, pageSize);
+            Optional<String> vietnamworksUsers = Utils.toJSON(vietnamworksUserRepository.getUsersByResumeId(resumes));
 
-      if (vietnamworksUsers.isPresent()) {
-        String jsonUsers = vietnamworksUsers.get().replaceAll("skills", "skill");
-        int result = Utils.postAndGetStatus(enrichUserAPI, jsonUsers);
-        if (result == 204) {
-          LOGGER.info("Imported user in page #" + pageIndex + " successfully.");
+            if (vietnamworksUsers.isPresent()) {
+                String jsonUsers = vietnamworksUsers.get().replaceAll("skills", "skill");
+                int result = Utils.postAndGetStatus(enrichUserAPI, jsonUsers);
+                if (result == 204) {
+                    LOGGER.info("Imported user in page #" + pageIndex + " successfully.");
+                } else {
+                    LOGGER.info("Import user in page #" + pageIndex + " fail. Error Code = " + result);
+                }
+            }
+            pageIndex++;
+            Thread.sleep(1000);
         }
-        else {
-          LOGGER.info("Import user in page #" + pageIndex + " fail. Error Code = " + result);
-        }
-      }
-      pageIndex++;
-      Thread.sleep(1000);
     }
-  }
 
 }

@@ -9,11 +9,11 @@ import org.slf4j.LoggerFactory;
  */
 public class StackoverflowEnricher {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(StackoverflowEnricher.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(StackoverflowEnricher.class);
 
-  private static String configJsonPath = PropertyManager.getProperty("stackoverflow.config");
+    private static String configJsonPath = PropertyManager.getProperty("stackoverflow.config");
 
-  public static void main(String[] args) {
+    public static void main(String[] args) {
 
-  }
+    }
 }

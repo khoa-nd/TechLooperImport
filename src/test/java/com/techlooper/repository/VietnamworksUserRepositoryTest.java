@@ -8,20 +8,19 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import javax.annotation.Resource;
-
 import java.sql.SQLException;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNotNull;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = {VietnamworksDatabaseConfiguration.class})
 public class VietnamworksUserRepositoryTest {
 
-  @Resource
-  private JdbcTemplate jdbcTemplate;
+    @Resource
+    private JdbcTemplate jdbcTemplate;
 
-  @Test
-  public void testDatabaseConnection() throws SQLException {
-    assertNotNull(jdbcTemplate.getDataSource().getConnection());
-  }
+    @Test
+    public void testDatabaseConnection() throws SQLException {
+        assertNotNull(jdbcTemplate.getDataSource().getConnection());
+    }
 }
