@@ -5,8 +5,8 @@ package com.techlooper.exception;
  */
 public class ShouldHaltException extends RuntimeException {
 
-  public ShouldHaltException(String error) {
-    super(error);
-  }
+    public ShouldHaltException(String error) {
+        super(error);
+    }
 }
 

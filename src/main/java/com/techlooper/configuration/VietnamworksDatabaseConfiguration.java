@@ -15,37 +15,37 @@ import java.sql.SQLException;
 @Configuration
 @ComponentScan(basePackages = "com.techlooper")
 @PropertySources({
-  @PropertySource("classpath:application.properties"),
-  @PropertySource(value = "classpath:override.properties", ignoreResourceNotFound = true)
+        @PropertySource("classpath:application.properties"),
+        @PropertySource(value = "classpath:override.properties", ignoreResourceNotFound = true)
 })
 public class VietnamworksDatabaseConfiguration {
 
-  @Value("${vietnamworks.db.connectionUrl}")
-  private String connectionUrl;
+    @Value("${vietnamworks.db.connectionUrl}")
+    private String connectionUrl;
 
-  @Value("${vietnamworks.db.username}")
-  private String username;
+    @Value("${vietnamworks.db.username}")
+    private String username;
 
-  @Value("${vietnamworks.db.password}")
-  private String password;
+    @Value("${vietnamworks.db.password}")
+    private String password;
 
-  @Bean(name = "vnwDataSource")
-  public DataSource dataSource() throws SQLException {
-    DataSource ds = new DriverManagerDataSource(connectionUrl, username, password);
-    if (ds.getConnection() == null) {
-      throw new SQLException();
+    @Bean(name = "vnwDataSource")
+    public DataSource dataSource() throws SQLException {
+        DataSource ds = new DriverManagerDataSource(connectionUrl, username, password);
+        if (ds.getConnection() == null) {
+            throw new SQLException();
+        }
+        return ds;
     }
-    return ds;
-  }
 
-  @Bean(name = "vnwJdbcTemplate")
-  public JdbcTemplate jdbcTemplate(DataSource vnwDataSource) {
-    return new JdbcTemplate(vnwDataSource);
-  }
+    @Bean(name = "vnwJdbcTemplate")
+    public JdbcTemplate jdbcTemplate(DataSource vnwDataSource) {
+        return new JdbcTemplate(vnwDataSource);
+    }
 
-  @Bean
-  public static PropertySourcesPlaceholderConfigurer propertySourcesPlaceholderConfigurer() {
-    return new PropertySourcesPlaceholderConfigurer();
-  }
+    @Bean
+    public static PropertySourcesPlaceholderConfigurer propertySourcesPlaceholderConfigurer() {
+        return new PropertySourcesPlaceholderConfigurer();
+    }
 
 }
