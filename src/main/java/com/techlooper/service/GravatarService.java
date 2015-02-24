@@ -1,6 +1,5 @@
 package com.techlooper.service;
-
-import com.sun.istack.internal.NotNull;
+import javax.validation.constraints.NotNull;
 import com.techlooper.pojo.GravatarModel;
 import com.techlooper.pojo.GravatarResponse;
 import org.apache.commons.collections4.CollectionUtils;
