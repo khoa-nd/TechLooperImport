@@ -32,7 +32,7 @@ public class VietnamworksUserImport {
         final int totalUsers = vietnamworksUserRepository.getTotalUser();
         final int pageSize = 1;
         final int numberOfPages = totalUsers % pageSize == 0 ? totalUsers / pageSize : totalUsers / pageSize + 1;
-        int pageIndex = 80389;
+        int pageIndex = 0;
 
         while (pageIndex < numberOfPages) {
             List<Long> resumes = vietnamworksUserRepository.getResumeList(pageIndex * pageSize, pageSize);
