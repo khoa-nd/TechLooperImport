@@ -45,4 +45,15 @@ public class GravatarServiceTest {
         assertEquals("https://secure.gravatar.com/avatar/41d0bb0711c4102dc381d5e731973d2c", photoModel.getValue());
     }
 
+    @Test
+    public void testFindGravatarProfile205e460b479e2e5b48aec07710c08d50() throws Exception{
+        GravatarService gravatarService = new GravatarService();
+        // @see more at https://en.gravatar.com/205e460b479e2e5b48aec07710c08d50.json
+        final GravatarModel gravatarProfile = gravatarService.findGravatarProfile("beau@dentedreality.com.au");
+        assertNotNull(gravatarProfile);
+        assertNotNull(gravatarProfile.getProfileBackground());
+        assertEquals("#9c9c9c", gravatarProfile.getProfileBackground().getColor());
+        assertEquals("https://secure.gravatar.com/bg/1428/e9db3f026b7ce7748e58169cecb4980f", gravatarProfile.getProfileBackground().getUrl());
+
+    }
 }

@@ -17,6 +17,17 @@ public class GravatarModel {
     @JsonProperty("photos")
     private List<PhotoModel> photos;
 
+    @JsonProperty("profileBackground")
+    private ProfileBackgroundModel profileBackground;
+
+    public ProfileBackgroundModel getProfileBackground() {
+        return profileBackground;
+    }
+
+    public void setProfileBackground(ProfileBackgroundModel profileBackground) {
+        this.profileBackground = profileBackground;
+    }
+
     public String getProfileUrl() {
         return profileUrl;
     }
