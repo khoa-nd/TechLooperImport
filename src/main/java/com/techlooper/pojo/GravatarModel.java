@@ -23,6 +23,17 @@ public class GravatarModel {
     @JsonProperty("name")
     private NameModel name;
 
+    @JsonProperty("phoneNumbers")
+    private List<PhoneNumberModel> phoneNumbers;
+
+    public List<PhoneNumberModel> getPhoneNumbers() {
+        return phoneNumbers;
+    }
+
+    public void setPhoneNumbers(List<PhoneNumberModel> phoneNumbers) {
+        this.phoneNumbers = phoneNumbers;
+    }
+
     public NameModel getName() {
         return name;
     }

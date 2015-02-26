@@ -60,5 +60,10 @@ public class GravatarServiceTest {
         assertEquals("Lebens", gravatarProfile.getName().getFamilyName());
         assertEquals("Beau Lebens", gravatarProfile.getName().getFormatted());
 
+        assertNotNull(gravatarProfile.getPhoneNumbers());
+        assertNotNull(gravatarProfile.getPhoneNumbers().get(0));
+        assertEquals("mobile", gravatarProfile.getPhoneNumbers().get(0).getType());
+        assertEquals("+1-415-279-0783", gravatarProfile.getPhoneNumbers().get(0).getValue());
+
     }
 }
