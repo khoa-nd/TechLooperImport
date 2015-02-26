@@ -1,8 +1,11 @@
 package com.techlooper.service;
 
+import com.techlooper.pojo.AccountModel;
 import com.techlooper.pojo.GravatarModel;
 import com.techlooper.pojo.PhotoModel;
 import org.junit.Test;
+
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -73,5 +76,17 @@ public class GravatarServiceTest {
         assertNotNull(gravatarProfile.getIms());
         assertNotNull(gravatarProfile.getIms().get(0));
         assertTrue(gravatarProfile.getIms().size() == 5);
+
+        final List<AccountModel> accounts = gravatarProfile.getAccounts();
+        assertNotNull(accounts);
+        assertNotNull(accounts.get(0));
+        assertTrue(accounts.size() == 8);
+        accounts.stream().filter(account -> account.getDomain().equals("linkedin.com")).forEach(account -> {
+            assertEquals("beaulebens", account.getDisplay());
+            assertEquals("beaulebens", account.getUsername());
+            assertEquals("linkedin", account.getShortName());
+            assertTrue(account.isVerified());
+            assertEquals("http://www.linkedin.com/in/beaulebens", account.getUrl());
+        });
     }
 }
