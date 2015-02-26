@@ -9,7 +9,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class GravatarModel {
-    private String profileUrl, thumbnailUrl;
+    private String profileUrl, thumbnailUrl, preferredUsername, displayName, aboutMe;
 
     public String getProfileUrl() {
         return profileUrl;
@@ -27,4 +27,27 @@ public class GravatarModel {
         this.thumbnailUrl = thumbnailUrl;
     }
 
+    public String getPreferredUsername() {
+        return preferredUsername;
+    }
+
+    public void setPreferredUsername(String preferredUsername) {
+        this.preferredUsername = preferredUsername;
+    }
+
+    public String getDisplayName() {
+        return displayName;
+    }
+
+    public void setDisplayName(String displayName) {
+        this.displayName = displayName;
+    }
+
+    public String getAboutMe() {
+        return aboutMe;
+    }
+
+    public void setAboutMe(String aboutMe) {
+        this.aboutMe = aboutMe;
+    }
 }

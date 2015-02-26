@@ -5,6 +5,7 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Created by chrisshayan on 2/21/15.
@@ -27,8 +28,15 @@ public class GravatarServiceTest {
 
         final String myProfileUrl = "http://gravatar.com/shayanchris";
         final String myThumbnailUrl = "https://secure.gravatar.com/avatar/41d0bb0711c4102dc381d5e731973d2c";
+        final String preferredUsername = "shayanchris";
+        final String displayName = "shayanchris";
+        final String aboutMe = "white-russian";
+
         assertEquals(myProfileUrl, gravatarProfile.getProfileUrl());
         assertEquals(myThumbnailUrl, gravatarProfile.getThumbnailUrl());
+        assertEquals(preferredUsername, gravatarProfile.getPreferredUsername());
+        assertEquals(displayName, gravatarProfile.getDisplayName());
+        assertTrue(gravatarProfile.getAboutMe().contains(aboutMe));
     }
 
 }
