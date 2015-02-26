@@ -65,5 +65,10 @@ public class GravatarServiceTest {
         assertEquals("mobile", gravatarProfile.getPhoneNumbers().get(0).getType());
         assertEquals("+1-415-279-0783", gravatarProfile.getPhoneNumbers().get(0).getValue());
 
+        assertNotNull(gravatarProfile.getEmails());
+        assertNotNull(gravatarProfile.getEmails().get(0));
+        assertTrue(gravatarProfile.getEmails().get(0).isPrimary());
+        assertEquals("beau@dentedreality.com.au", gravatarProfile.getEmails().get(0).getValue());
+
     }
 }
