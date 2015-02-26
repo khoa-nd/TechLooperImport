@@ -1,6 +1,7 @@
 package com.techlooper.service;
 
 import com.techlooper.pojo.GravatarModel;
+import com.techlooper.pojo.PhotoModel;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -37,6 +38,11 @@ public class GravatarServiceTest {
         assertEquals(preferredUsername, gravatarProfile.getPreferredUsername());
         assertEquals(displayName, gravatarProfile.getDisplayName());
         assertTrue(gravatarProfile.getAboutMe().contains(aboutMe));
+        assertNotNull(gravatarProfile.getPhotos());
+        final PhotoModel photoModel = gravatarProfile.getPhotos().get(0);
+        assertNotNull(photoModel);
+        assertEquals("thumbnail", photoModel.getType());
+        assertEquals("https://secure.gravatar.com/avatar/41d0bb0711c4102dc381d5e731973d2c", photoModel.getValue());
     }
 
 }

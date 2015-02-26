@@ -1,6 +1,9 @@
 package com.techlooper.pojo;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import java.util.List;
 
 /**
  * Created by chrisshayan on 2/21/15.
@@ -10,6 +13,9 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class GravatarModel {
     private String profileUrl, thumbnailUrl, preferredUsername, displayName, aboutMe;
+
+    @JsonProperty("photos")
+    private List<PhotoModel> photos;
 
     public String getProfileUrl() {
         return profileUrl;
@@ -49,5 +55,13 @@ public class GravatarModel {
 
     public void setAboutMe(String aboutMe) {
         this.aboutMe = aboutMe;
+    }
+
+    public List<PhotoModel> getPhotos() {
+        return photos;
+    }
+
+    public void setPhotos(List<PhotoModel> photos) {
+        this.photos = photos;
     }
 }
