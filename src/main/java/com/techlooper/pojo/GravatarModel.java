@@ -20,6 +20,17 @@ public class GravatarModel {
     @JsonProperty("profileBackground")
     private ProfileBackgroundModel profileBackground;
 
+    @JsonProperty("name")
+    private NameModel name;
+
+    public NameModel getName() {
+        return name;
+    }
+
+    public void setName(NameModel name) {
+        this.name = name;
+    }
+
     public ProfileBackgroundModel getProfileBackground() {
         return profileBackground;
     }

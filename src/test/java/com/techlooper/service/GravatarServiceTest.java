@@ -55,5 +55,10 @@ public class GravatarServiceTest {
         assertEquals("#9c9c9c", gravatarProfile.getProfileBackground().getColor());
         assertEquals("https://secure.gravatar.com/bg/1428/e9db3f026b7ce7748e58169cecb4980f", gravatarProfile.getProfileBackground().getUrl());
 
+        assertNotNull(gravatarProfile.getName());
+        assertEquals("Beau", gravatarProfile.getName().getGivenName());
+        assertEquals("Lebens", gravatarProfile.getName().getFamilyName());
+        assertEquals("Beau Lebens", gravatarProfile.getName().getFormatted());
+
     }
 }
