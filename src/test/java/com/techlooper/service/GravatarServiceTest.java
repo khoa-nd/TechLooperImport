@@ -3,6 +3,7 @@ package com.techlooper.service;
 import com.techlooper.pojo.AccountModel;
 import com.techlooper.pojo.GravatarModel;
 import com.techlooper.pojo.PhotoModel;
+import com.techlooper.pojo.UrlModel;
 import org.junit.Test;
 
 import java.util.List;
@@ -87,6 +88,14 @@ public class GravatarServiceTest {
             assertEquals("linkedin", account.getShortName());
             assertTrue(account.isVerified());
             assertEquals("http://www.linkedin.com/in/beaulebens", account.getUrl());
+        });
+
+        final List<UrlModel> urls = gravatarProfile.getUrls();
+        assertNotNull(urls);
+        assertNotNull(urls.get(0));
+        assertTrue(urls.size() == 6);
+        urls.stream().filter(url -> url.getTitle().equals("Gravatar")).forEach(url -> {
+            assertEquals("http://gravatar.com", url.getValue());
         });
     }
 }

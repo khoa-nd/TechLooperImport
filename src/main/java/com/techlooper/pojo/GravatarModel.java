@@ -35,6 +35,17 @@ public class GravatarModel {
     @JsonProperty("accounts")
     private List<AccountModel> accounts;
 
+    @JsonProperty("urls")
+    private List<UrlModel> urls;
+
+    public List<UrlModel> getUrls() {
+        return urls;
+    }
+
+    public void setUrls(List<UrlModel> urls) {
+        this.urls = urls;
+    }
+
     public List<AccountModel> getAccounts() {
         return accounts;
     }
