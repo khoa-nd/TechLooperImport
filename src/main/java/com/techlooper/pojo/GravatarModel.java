@@ -29,6 +29,17 @@ public class GravatarModel {
     @JsonProperty("emails")
     private List<EmailModel> emails;
 
+    @JsonProperty("ims")
+    private List<IMModel> ims;
+
+    public List<IMModel> getIms() {
+        return ims;
+    }
+
+    public void setIms(List<IMModel> ims) {
+        this.ims = ims;
+    }
+
     public List<EmailModel> getEmails() {
         return emails;
     }

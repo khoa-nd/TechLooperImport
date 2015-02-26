@@ -70,5 +70,8 @@ public class GravatarServiceTest {
         assertTrue(gravatarProfile.getEmails().get(0).isPrimary());
         assertEquals("beau@dentedreality.com.au", gravatarProfile.getEmails().get(0).getValue());
 
+        assertNotNull(gravatarProfile.getIms());
+        assertNotNull(gravatarProfile.getIms().get(0));
+        assertTrue(gravatarProfile.getIms().size() == 5);
     }
 }
