@@ -133,7 +133,7 @@ public class AboutMeEnricher extends AbstractEnricher {
   }
 
   //TODO: handle no user found by email => choose other data to query
-  public void consumeESUsers(JsonNode users) {
+  public void consumeElasticSearchUsers(JsonNode users) {
     LOGGER.debug("Consume elastic search users");
     doApiQuery(users, "/_id", "email");
   }

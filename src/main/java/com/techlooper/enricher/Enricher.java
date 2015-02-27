@@ -12,7 +12,7 @@ public interface Enricher {
 
     void initialize(ExecutorService executorService, String configPath, JsonNode appConfig) throws IOException;
 
-    void consumeESUsers(JsonNode users);
+    void consumeElasticSearchUsers(JsonNode users);
 
     JsonNode getConfig();
 

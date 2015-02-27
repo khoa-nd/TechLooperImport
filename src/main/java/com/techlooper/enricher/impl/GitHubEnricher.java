@@ -11,7 +11,7 @@ public class GitHubEnricher extends AbstractEnricher {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(GitHubEnricher.class);
 
-    public void consumeESUsers(JsonNode users) {
+    public void consumeElasticSearchUsers(JsonNode users) {
         LOGGER.debug("Consume elastic search users");
 
     }
