@@ -10,15 +10,15 @@ import java.util.concurrent.ExecutorService;
  */
 public interface Enricher {
 
-    void initialize(ExecutorService executorService, String configPath, JsonNode appConfig) throws IOException;
+  void initialize(ExecutorService executorService, String configPath, JsonNode appConfig) throws IOException;
 
-    void consumeElasticSearchUsers(JsonNode users);
+  void consumeElasticSearchUsers(JsonNode users);
 
-    JsonNode getConfig();
+  JsonNode getConfig();
 
-    String getTechlooperFolder();
+  String getTechlooperFolder();
 
-    void postTechlooper(String source, JsonNode jsonNode);
+  void postTechlooper(String source, JsonNode jsonNode);
 
-    void retryFailApi(Integer lineIndex, String queryUrl);
+  void retryFailApi(Integer lineIndex, String queryUrl);
 }
