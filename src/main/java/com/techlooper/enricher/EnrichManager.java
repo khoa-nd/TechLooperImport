@@ -75,7 +75,7 @@ public class EnrichManager {
     private static void enrichUser(Enricher eInstance, JsonNode eConfig) throws IOException, UnirestException {
         LOGGER.debug("Enrich users from Elastic Search >>");
         ElasticSearchService elasticSearch = new ElasticSearchService(eConfig, LOGGER);
-        elasticSearch.queryUserInfo((users) -> eInstance.consumeESUsers(users));
+        elasticSearch.queryUserInfo((users) -> eInstance.consumeElasticSearchUsers(users));
     }
 
     private static void retryFromLastPrint(Enricher eInstance, JsonNode eConfig) throws IOException {
@@ -83,5 +83,6 @@ public class EnrichManager {
         RetryService retryManager = new RetryService(eConfig, LOGGER);
         retryManager.fromFile(eInstance.getTechlooperFolder(), ".json", (path, jsonNode) -> eInstance.postTechlooper(path.toString(), jsonNode));
         retryManager.fromFailList((index, queryUrl) -> eInstance.retryFailApi(index, queryUrl));
+        LOGGER.debug("<< Done retry");
     }
 }
