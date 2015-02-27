@@ -9,14 +9,14 @@ import org.slf4j.LoggerFactory;
  */
 public class GitHubEnricher extends AbstractEnricher {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(GitHubEnricher.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(GitHubEnricher.class);
 
-  public void consumeESUsers(JsonNode users) {
-    LOGGER.debug("Consume elastic search users");
+    public void consumeESUsers(JsonNode users) {
+        LOGGER.debug("Consume elastic search users");
 
-  }
+    }
 
-  public void retryFailApi(Integer lineIndex, String queryUrl) {
+    public void retryFailApi(Integer lineIndex, String queryUrl) {
 
-  }
+    }
 }

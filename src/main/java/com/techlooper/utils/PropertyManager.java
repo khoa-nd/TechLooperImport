@@ -13,44 +13,41 @@ import java.util.Properties;
  */
 public class PropertyManager {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(PropertyManager.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(PropertyManager.class);
 
-  public static Properties properties = new Properties();
+    public static Properties properties = new Properties();
 
-  static {
-    try {
-      URL res = PropertyManager.class.getClassLoader().getResource("application.properties");
-      properties.load(res.openStream());
-      LOGGER.debug("Loaded properties at path: {}", res.getPath());
+    static {
+        try {
+            URL res = PropertyManager.class.getClassLoader().getResource("application.properties");
+            properties.load(res.openStream());
+            LOGGER.debug("Loaded properties at path: {}", res.getPath());
+        } catch (Exception e) {
+            LOGGER.error("Failed to load properties file", e);
+            throw new InitializationException(e.getMessage());
+        }
+        overrideProperties();
     }
-    catch (Exception e) {
-      LOGGER.error("Failed to load properties file", e);
-      throw new InitializationException(e.getMessage());
-    }
-    overrideProperties();
-  }
 
-  private static void overrideProperties() {
-    try {
-      overrideProperties(PropertyManager.class.getClassLoader().getResource("override.properties").openStream());
+    private static void overrideProperties() {
+        try {
+            overrideProperties(PropertyManager.class.getClassLoader().getResource("override.properties").openStream());
+        } catch (Exception e) {
+            LOGGER.debug("Failed to override properties file");
+        }
     }
-    catch (Exception e) {
-      LOGGER.debug("Failed to override properties file");
-    }
-  }
 
-  public static void overrideProperties(InputStream inputStream) {
-    try {
-      properties.load(inputStream);
+    public static void overrideProperties(InputStream inputStream) {
+        try {
+            properties.load(inputStream);
+        } catch (Exception e) {
+            LOGGER.debug("Failed to override properties file");
+        }
     }
-    catch (Exception e) {
-      LOGGER.debug("Failed to override properties file");
-    }
-  }
 
-  public static String getProperty(String key) {
-    String value = properties.getProperty(key);
-    LOGGER.debug("Use property key: {} = {} ", key, value);
-    return value;
-  }
+    public static String getProperty(String key) {
+        String value = properties.getProperty(key);
+        LOGGER.debug("Use property key: {} = {} ", key, value);
+        return value;
+    }
 }

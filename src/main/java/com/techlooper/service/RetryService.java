@@ -18,51 +18,50 @@ import java.util.function.BiConsumer;
  */
 public class RetryService {
 
-  private Logger logger;
+    private Logger logger;
 
-  private JsonNode config;
+    private JsonNode config;
 
-  public RetryService(JsonNode config, Logger logger) {
-    this.config = config;
-    this.logger = logger;
-  }
-
-  public void fromFile(String folder, String ext, BiConsumer<Path, JsonNode> consumer) throws IOException {
-    logger.debug("Recover from file ext: {}", ext);
-    Files.find(Paths.get(folder), 1, (path, attrs) -> {
-      if (attrs.isRegularFile()) {
-        return path.toString().endsWith(ext);
-      }
-      return false;
-    }).forEach(path -> {
-      try {
-        consumer.accept(path, Utils.parseJson(new File(path.toString())));
-      }
-      catch (IOException e) {
-        logger.error("ERROR", e);
-      }
-    });
-  }
-
-  public void fromFailList(BiConsumer<Integer, String> consumer) throws IOException {
-    String failListPath = config.at("/failListPath").asText();
-    if (new File(failListPath).length() == 0) {
-      logger.debug("Empty fail list at {}", failListPath);
-      return;
+    public RetryService(JsonNode config, Logger logger) {
+        this.config = config;
+        this.logger = logger;
     }
 
-    String doneFilePath = failListPath + ".done";
-    if (new File(doneFilePath).exists()) {
-      logger.debug("Already done at {}", doneFilePath);
-      return;
+    public void fromFile(String folder, String ext, BiConsumer<Path, JsonNode> consumer) throws IOException {
+        logger.debug("Recover from file ext: {}", ext);
+        Files.find(Paths.get(folder), 1, (path, attrs) -> {
+            if (attrs.isRegularFile()) {
+                return path.toString().endsWith(ext);
+            }
+            return false;
+        }).forEach(path -> {
+            try {
+                consumer.accept(path, Utils.parseJson(new File(path.toString())));
+            } catch (IOException e) {
+                logger.error("ERROR", e);
+            }
+        });
     }
 
-    logger.debug("Recover from file {}", failListPath);
-    final Integer[] index = {0};
-    Files.lines(Paths.get(failListPath), StandardCharsets.UTF_8).forEach(queryUrl -> consumer.accept(index[0]++, queryUrl));
+    public void fromFailList(BiConsumer<Integer, String> consumer) throws IOException {
+        String failListPath = config.at("/failListPath").asText();
+        if (new File(failListPath).length() == 0) {
+            logger.debug("Empty fail list at {}", failListPath);
+            return;
+        }
 
-    logger.debug("Done file {}", failListPath);
-    ((ObjectNode) config).remove("failListPath");
-    Files.move(Paths.get(failListPath), Paths.get(doneFilePath));
-  }
+        String doneFilePath = failListPath + ".done";
+        if (new File(doneFilePath).exists()) {
+            logger.debug("Already done at {}", doneFilePath);
+            return;
+        }
+
+        logger.debug("Recover from file {}", failListPath);
+        final Integer[] index = {0};
+        Files.lines(Paths.get(failListPath), StandardCharsets.UTF_8).forEach(queryUrl -> consumer.accept(index[0]++, queryUrl));
+
+        logger.debug("Done file {}", failListPath);
+        ((ObjectNode) config).remove("failListPath");
+        Files.move(Paths.get(failListPath), Paths.get(doneFilePath));
+    }
 }
