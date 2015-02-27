@@ -5,6 +5,10 @@
     {
       "configPath": "src/main/resources/aboutme.json",
       "class": "com.techlooper.enricher.impl.AboutMeEnricher"
+    },
+    {
+      "configPath": "src/main/resources/gravatar.json",
+      "class": "com.techlooper.enricher.impl.GravatarEnricher"
     }
   ]
 }
