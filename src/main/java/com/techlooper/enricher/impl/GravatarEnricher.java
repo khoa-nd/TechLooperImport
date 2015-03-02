@@ -33,7 +33,7 @@ public class GravatarEnricher extends AbstractEnricher {
     Optional.ofNullable(gravatarService.findProfile(email)).ifPresent(jsonNode -> {
       try {
         if (jsonNode.isObject()) {
-          LOGGER.debug("Refine json from Gravatar..");
+          LOGGER.debug("Refine json from Gravatar, email {} ...", email);
           ObjectNode wrUser = (ObjectNode) jsonNode;
           if (jsonNode.get("entry").get(0).at("/name").isArray()) {
             ((ObjectNode) jsonNode.get("entry").get(0)).remove("name");
@@ -41,6 +41,9 @@ public class GravatarEnricher extends AbstractEnricher {
           wrUser.put("email", email);
           wrUser.put("crawlersource", "GRAVATAR");
           gravatarUser[0] = jsonNode;
+        }
+        else {
+          LOGGER.debug(jsonNode.toString() + ": " +  email);
         }
       }
       catch (Exception e) {
