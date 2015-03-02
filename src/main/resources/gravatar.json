@@ -2,10 +2,9 @@
   "folderName": "gravatar/",
   "techlooper": {
     "apiUrl": "http://techlooper.com/api/users/addAll",
-    "folderName": "techlooper/",
-    "mapper": [
-    ]
+    "folderName": "techlooper/"
   },
+  "apiSearchQuery": "https://en.gravatar.com/%s.json",
   "userCountQuery": {
     "url": "http://es-staging.vietnamworks.com/techlooper/user/_search?search_type=count",
     "username": "es",
