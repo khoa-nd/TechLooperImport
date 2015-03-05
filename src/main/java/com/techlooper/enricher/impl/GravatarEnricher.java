@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.techlooper.service.GravatarService;
+import com.techlooper.utils.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,7 +16,7 @@ import java.util.Optional;
  */
 public class GravatarEnricher extends AbstractEnricher {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(AboutMeEnricher.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(GravatarEnricher.class);
 
   private GravatarService gravatarService = new GravatarService();
 
@@ -24,7 +25,7 @@ public class GravatarEnricher extends AbstractEnricher {
     gravatarService.setConfig(config);
     ArrayNode techlooperUsers = JsonNodeFactory.instance.arrayNode();
     users.forEach(user -> Optional.ofNullable(refineUser(user)).ifPresent(techlooperUsers::add));
-    postTechlooper(config.at("/userQuery/query/from").asInt() + ".es", techlooperUsers);
+    postTechlooper(config.at("/userQuery/query/from").asInt() + "es", techlooperUsers);
   }
 
   private JsonNode refineUser(JsonNode user) {

@@ -14,6 +14,7 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.ImmutableSettings;
@@ -168,6 +169,35 @@ public class Utils {
     post.setEntity(new StringEntity(json, ContentType.create("application/json", StandardCharsets.UTF_8)));
     HttpResponse response = httpClient.execute(post);
     return response.getStatusLine().getStatusCode();
+  }
+
+  public static String postAndReadContent(String url, String jsonString) {
+    HttpClient httpClient = HttpClients.createDefault();
+    HttpPost post = new HttpPost(url);
+    post.setEntity(new StringEntity(jsonString, ContentType.create("application/json", "UTF-8")));
+    String content = null;
+    try {
+      HttpResponse response = httpClient.execute(post);
+      content = EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
+    }
+    catch (Exception err) {
+      LOGGER.error("ERROR", err);
+    }
+    return content;
+  }
+
+  public static String postAndReadContent(String url) {
+    HttpClient httpClient = HttpClients.createDefault();
+    HttpPost post = new HttpPost(url);
+    String content = null;
+    try {
+      HttpResponse response = httpClient.execute(post);
+      content = EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
+    }
+    catch (Exception err) {
+      LOGGER.error("ERROR", err);
+    }
+    return content;
   }
 
   public static int postAndGetStatus(String url, JsonNode jsonNode) throws IOException, UnirestException {

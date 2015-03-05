@@ -28,7 +28,7 @@ public class RetryService {
     }
 
     public void fromFile(String folder, String ext, BiConsumer<Path, JsonNode> consumer) throws IOException {
-        logger.debug("Recover from file ext: {}", ext);
+        logger.debug("Recover from folder ext: {}", ext);
         Files.find(Paths.get(folder), 1, (path, attrs) -> {
             if (attrs.isRegularFile()) {
                 return path.toString().endsWith(ext);
@@ -36,6 +36,7 @@ public class RetryService {
             return false;
         }).forEach(path -> {
             try {
+                logger.debug("Recover from file ext: {}", path);
                 consumer.accept(path, Utils.parseJson(new File(path.toString())));
             } catch (IOException e) {
                 logger.error("ERROR", e);

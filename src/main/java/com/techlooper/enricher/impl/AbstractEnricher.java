@@ -1,9 +1,9 @@
 package com.techlooper.enricher.impl;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.mashape.unirest.http.Unirest;
 import com.techlooper.enricher.Enricher;
 import com.techlooper.utils.Utils;
+import org.apache.commons.io.FilenameUtils;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
@@ -23,85 +23,103 @@ import java.util.concurrent.ExecutorService;
  */
 public abstract class AbstractEnricher implements Enricher {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractEnricher.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(AbstractEnricher.class);
 
-    protected String configPath;
+  protected String configPath;
 
-    protected String folder;
+  protected String folder;
 
-    protected String ioFolder;
+  protected String ioFolder;
 
-    protected String failListPath;
+  protected String failListPath;
 
-    protected JsonNode config;
+  protected JsonNode config;
 
-    protected JsonNode appConfig;
+  protected JsonNode appConfig;
 
-    protected ExecutorService executorService;
+  protected ExecutorService executorService;
 
-    protected DateTimeFormatter dateTimeFormatter = DateTimeFormat.forPattern("yyyyMMddHHmmss").withLocale(Locale.US);
+  protected DateTimeFormatter dateTimeFormatter = DateTimeFormat.forPattern("yyyyMMddHHmmss").withLocale(Locale.US);
 
-    protected String techlooperFolder;
+  protected String techlooperFolder;
 
-    protected String apiFolder;
+  protected String apiFolder;
 
-    public void postTechlooper(String source, JsonNode users) {
-        String url = config.at("/techlooper/apiUrl").asText();
-        String jsonPath = String.format("%s%s.json", techlooperFolder, source);
-        try {
-            if (new File(source).exists()) {
-                jsonPath = source;
-            }
-            int statusCode = Unirest.post(url).header("Content-Type", "application/json").body(users.toString()).asString().getStatus();
-            if (statusCode == HttpServletResponse.SC_NO_CONTENT) {
-                if (new File(jsonPath).exists()) {
-                    Files.move(Paths.get(jsonPath), Paths.get(jsonPath + ".ok"));
-                } else {
-                    Utils.writeToFile(users, String.format("%s.ok", jsonPath));
-                }
-            } else {
-                Utils.writeToFile(users, jsonPath);
-            }
-        } catch (Exception e) {
-            LOGGER.error("Not post to url = {}, error= {}", url, e);
-            try {
-                Utils.writeToFile(users, jsonPath);
-            } catch (IOException ex) {
-                LOGGER.error("ERROR", ex);
-            }
+  public void postTechlooper(String source, JsonNode users) {
+    if (users.size() == 0) {
+      LOGGER.debug("No user => not post to techlooper");
+      return;
+    }
+    String url = config.at("/techlooper/apiUrl").asText();
+    String jsonPath = String.format("%s.%s.json", techlooperFolder, source);
+    int statusCode = 0;
+    try {
+      if (new File(source).exists()) {
+        jsonPath = source;
+      }
+
+      statusCode = Utils.postAndGetStatus(url, users);// Unirest.post(url).header("Content-Type", "application/json").body(users.toString()).asString().getStatus();
+      if (statusCode == HttpServletResponse.SC_NO_CONTENT) {
+        if (new File(jsonPath).exists()) {
+          Files.move(Paths.get(jsonPath), Paths.get(jsonPath + ".ok"));
         }
-    }
-
-    public void initialize(ExecutorService executorService, String configPath, JsonNode appConfig) throws IOException {
-        LOGGER.debug("Initialize AboutMeEnricher with config {}", configPath);
-        try {
-            this.executorService = executorService;
-            this.appConfig = appConfig;
-            this.config = Utils.parseJson(new File(configPath));
-            this.configPath = configPath;
-
-            prepareProperties();
-        } catch (Exception e) {
-            LOGGER.error("ERROR", e);
-            Utils.writeToFile(config, this.configPath);
+        else {
+          Utils.writeToFile(users, String.format("%s.ok", jsonPath));
         }
+      }
+      else {
+//        jsonPath.lastIndexOf(".")
+        Utils.writeToFile(users, String.format("%s.%d.json", jsonPath.substring(0, FilenameUtils.indexOfExtension(jsonPath)), statusCode));
+      }
     }
-
-    private void prepareProperties() {
-        folder = this.appConfig.get("folder").asText();
-        ioFolder = folder + config.get("folderName").asText();
-        failListPath = String.format("%s%s.txt", ioFolder, dateTimeFormatter.print(DateTime.now()));
-
-        techlooperFolder = ioFolder + config.at("/techlooper/folderName").asText();
-        apiFolder = ioFolder + config.at("/api/folderName").asText();
-        Utils.sureFolder(techlooperFolder, apiFolder);
+    catch (Exception e) {
+      LOGGER.error("Not post to url = {}, error= {}", url, e);
+      try {
+        Utils.writeToFile(users, String.format("%s.%d.json", jsonPath.substring(0, FilenameUtils.indexOfExtension(jsonPath)), statusCode));
+//        Utils.writeToFile(users, String.format(jsonPath, statusCode));
+      }
+      catch (IOException ex) {
+        LOGGER.error("ERROR", ex);
+      }
     }
+  }
 
-    public String getTechlooperFolder() {
-        return techlooperFolder;
-    }
+  public void initialize(ExecutorService executorService, String configPath, JsonNode appConfig) throws IOException {
+    LOGGER.debug("Initialize AboutMeEnricher with config {}", configPath);
+    try {
+      this.executorService = executorService;
+      this.appConfig = appConfig;
+      this.config = Utils.parseJson(new File(configPath));
+      this.configPath = configPath;
 
-    public JsonNode getConfig() {
-        return config;
+      prepareProperties();
     }
+    catch (Exception e) {
+      LOGGER.error("ERROR", e);
+      Utils.writeToFile(config, this.configPath);
+    }
+  }
+
+  private void prepareProperties() {
+    folder = this.appConfig.get("folder").asText();
+    ioFolder = folder + config.get("folderName").asText();
+    failListPath = String.format("%s%s.txt", ioFolder, dateTimeFormatter.print(DateTime.now()));
+
+    techlooperFolder = ioFolder + config.at("/techlooper/folderName").asText();
+    apiFolder = ioFolder + config.at("/api/folderName").asText();
+    Utils.sureFolder(techlooperFolder, apiFolder);
+  }
+
+  public String getTechlooperFolder() {
+    return techlooperFolder;
+  }
+
+  public JsonNode getConfig() {
+    return config;
+  }
+
+//  public static void main(String[] arg) {
+//    String filename = "./abc.json";
+//    System.out.println(filename.substring(0, FilenameUtils.indexOfExtension(filename)));
+//  }
 }
