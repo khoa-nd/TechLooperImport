@@ -199,7 +199,15 @@ public class GitHubUserProfileEnricher {
         response.getHits().forEach(hit -> usernames.add(hit.field("profiles.GITHUB.username").getValue()));
 
         List<Callable<JsonNode>> jobs = new ArrayList<>();
-        usernames.forEach(username -> jobs.add(() -> enrichUserProfile(username)));
+        usernames.forEach(username -> {
+            jobs.add(() -> enrichUserProfile(username));
+            //Sleep 1 second before making a new request to import.io
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                LOGGER.error(e.getMessage());
+            }
+        });
         client.close();
 
         ArrayNode jsonUsers = JsonNodeFactory.instance.arrayNode();
