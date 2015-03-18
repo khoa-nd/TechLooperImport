@@ -73,7 +73,9 @@ public class GitHubUserProfileEnricher {
             doRetry(executorService);
         } else {
             FootPrint footPrint = Utils.readFootPrint(footPrintFilePath);
-            queryES(footPrint, executorService);
+            while(true) {
+                queryES(footPrint, executorService);
+            }
         }
         executorService.shutdown();
 //    Unirest.shutdown();
