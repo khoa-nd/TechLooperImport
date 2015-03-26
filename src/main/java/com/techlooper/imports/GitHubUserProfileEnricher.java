@@ -13,6 +13,7 @@ import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.index.query.FilterBuilder;
 import org.elasticsearch.index.query.FilterBuilders;
+import org.elasticsearch.search.SearchHitField;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -198,7 +199,12 @@ public class GitHubUserProfileEnricher {
         SearchResponse response = searchRequestBuilder.execute().actionGet();
 
         List<String> usernames = new ArrayList<>();
-        response.getHits().forEach(hit -> usernames.add(hit.field("profiles.GITHUB.username").getValue()));
+        response.getHits().forEach(hit -> {
+            SearchHitField githubProfile = hit.field("profiles.GITHUB.username");
+            if (githubProfile != null) {
+                usernames.add(githubProfile.getValue());
+            }
+        });
 
         List<Callable<JsonNode>> jobs = new ArrayList<>();
         usernames.forEach(username -> {
