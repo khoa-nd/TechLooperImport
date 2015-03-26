@@ -13,6 +13,7 @@ import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.index.query.FilterBuilder;
 import org.elasticsearch.index.query.FilterBuilders;
+import org.elasticsearch.search.SearchHitField;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -73,7 +74,9 @@ public class GitHubUserProfileEnricher {
             doRetry(executorService);
         } else {
             FootPrint footPrint = Utils.readFootPrint(footPrintFilePath);
-            queryES(footPrint, executorService);
+            while(true) {
+                queryES(footPrint, executorService);
+            }
         }
         executorService.shutdown();
 //    Unirest.shutdown();
@@ -196,10 +199,23 @@ public class GitHubUserProfileEnricher {
         SearchResponse response = searchRequestBuilder.execute().actionGet();
 
         List<String> usernames = new ArrayList<>();
-        response.getHits().forEach(hit -> usernames.add(hit.field("profiles.GITHUB.username").getValue()));
+        response.getHits().forEach(hit -> {
+            SearchHitField githubProfile = hit.field("profiles.GITHUB.username");
+            if (githubProfile != null) {
+                usernames.add(githubProfile.getValue());
+            }
+        });
 
         List<Callable<JsonNode>> jobs = new ArrayList<>();
-        usernames.forEach(username -> jobs.add(() -> enrichUserProfile(username)));
+        usernames.forEach(username -> {
+            jobs.add(() -> enrichUserProfile(username));
+            //Sleep 1 second before making a new request to import.io
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                LOGGER.error(e.getMessage());
+            }
+        });
         client.close();
 
         ArrayNode jsonUsers = JsonNodeFactory.instance.arrayNode();
