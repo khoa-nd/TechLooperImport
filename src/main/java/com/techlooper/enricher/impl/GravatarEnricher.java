@@ -25,7 +25,7 @@ public class GravatarEnricher extends AbstractEnricher {
     gravatarService.setConfig(config);
     ArrayNode techlooperUsers = JsonNodeFactory.instance.arrayNode();
     users.forEach(user -> Optional.ofNullable(refineUser(user)).ifPresent(techlooperUsers::add));
-    postTechlooper(config.at("/userQuery/query/from").asInt() + "es", techlooperUsers);
+    postTechlooper(config.at("/userQuery/query/from").asInt() + ".es", techlooperUsers);
   }
 
   private JsonNode refineUser(JsonNode user) {

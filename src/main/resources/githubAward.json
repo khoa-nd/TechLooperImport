@@ -1,0 +1,56 @@
+{
+  "GITHUB": {
+    "ranks": {
+      "css": [
+        {
+          "updatedTime": "2014-06-20T10:41:00Z",
+          "repos": 5,
+          "stars": 4,
+          "locations": [
+            {
+              "type": "city",
+              "name": "Ho Chi Minh",
+              "rank": 1,
+              "total": 95
+            },
+            {
+              "type": "country",
+              "name": "Vietnam",
+              "rank": 10,
+              "total": 195
+            },
+            {
+              "type": "worldwide",
+              "rank": 100,
+              "total": 195000
+            }
+          ]
+        },
+        {
+          "updatedTime": "2014-06-20T10:41:00Z",
+          "repos": 5,
+          "stars": 4,
+          "locations": [
+            {
+              "type": "city",
+              "name": "Ho Chi Minh",
+              "rank": 1,
+              "total": 95
+            },
+            {
+              "type": "country",
+              "name": "Vietnam",
+              "rank": 10,
+              "total": 195
+            },
+            {
+              "type": "worldwide",
+              "rank": 100,
+              "total": 195000
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
