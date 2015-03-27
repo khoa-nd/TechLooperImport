@@ -29,6 +29,8 @@
         <slf4j-api.version>1.7.9</slf4j-api.version>
         <logback.version>1.1.2</logback.version>
         <groovy.version>2.3.5</groovy.version>
+        <spring-data-jpa.version>1.7.0.RELEASE</spring-data-jpa.version>
+        <spring-data-elasticsearch>1.1.0.RELEASE</spring-data-elasticsearch>
     </properties>
 
     <dependencies>
@@ -136,6 +138,23 @@
             <groupId>com.benfante</groupId>
             <artifactId>JSlideShare</artifactId>
             <version>0.7</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.data</groupId>
+            <artifactId>spring-data-jpa</artifactId>
+            <version>${spring-data-jpa.version}</version>
+            <exclusions>
+                <exclusion>
+                    <artifactId>spring-data-commons</artifactId>
+                    <groupId>org.springframework.data</groupId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.data</groupId>
+            <artifactId>spring-data-elasticsearch</artifactId>
+            <version>${spring-data-elasticsearch}</version>
         </dependency>
 
         <dependency>
