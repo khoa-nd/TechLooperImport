@@ -12,6 +12,9 @@ import org.springframework.core.env.Environment;
 /**
  * Created by NguyenDangKhoa on 3/27/15.
  */
+//TODO : At the moment we deploy to server to run once to see how it will work. If nothing, we should implement
+//1. Install it as a cron job to run everyweek
+//2. Auto retry on users have been enriched fail due to ImportIO error
 public class GithubAwardUserCrawler {
 
     private static Logger LOGGER = LoggerFactory.getLogger(GithubAwardUserCrawler.class);
