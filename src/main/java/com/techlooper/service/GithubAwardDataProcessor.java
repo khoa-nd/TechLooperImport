@@ -47,6 +47,11 @@ public class GithubAwardDataProcessor {
                     locationRanks.add(locationRank);
                     ranks.put(languageRank.getLanguage(), locationRanks);
                 }
+
+                //add new skills if they haven't had it yet
+                if (!currentSkills.contains(languageRank.getLanguage())) {
+                    currentSkills.add(languageRank.getLanguage());
+                }
             }
         }
     }
