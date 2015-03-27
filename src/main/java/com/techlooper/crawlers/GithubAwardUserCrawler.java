@@ -27,7 +27,9 @@ public class GithubAwardUserCrawler {
         String apiKey = environment.getProperty("githubAwardRankingEnricher.apiKey");
         String inputUrl = environment.getProperty("githubAwardRankingEnricher.inputUrl");
 
-        String[] countries = new String[]{"vietnam"};
+        final String[] countries = {"vietnam", "japan", "thailand", "myanmar", "singapore", "malaysia", "indonesia","cambodia", "australia", "china", "india", "korea", "taiwan",
+            "spain", "ukraine", "poland", "russia", "bulgaria", "turkey", "greece", "serbia", "romania", "belarus", "lithuania", "estonia",
+            "italy", "portugal", "colombia", "brazil", "chile", "argentina", "venezuela", "bolivia", "mexico"};
         GithubAwardRequest githubAwardRequest = new GithubAwardRequest(connectorId, userId, apiKey, inputUrl);
 
         for (String country : countries) {

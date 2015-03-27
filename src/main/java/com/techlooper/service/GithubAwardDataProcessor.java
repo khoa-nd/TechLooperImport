@@ -23,6 +23,10 @@ public class GithubAwardDataProcessor {
             List<String> currentSkills = (List<String>) profile.get("skills");
             Map<String, List<UserImportLocationRank>> ranks = (Map<String, List<UserImportLocationRank>>) profile.get("ranks");
 
+            if (ranks == null) {
+                ranks = new HashMap<>();
+            }
+
             List<GithubAwardModel> languageRanks = githubAwardResponse.getResults();
             for (GithubAwardModel languageRank : languageRanks) {
                 processLanguageRank(languageRank);
@@ -53,6 +57,8 @@ public class GithubAwardDataProcessor {
                     currentSkills.add(languageRank.getLanguage());
                 }
             }
+            //update ranks for user if it hasn't already existed
+            profile.put("ranks", ranks);
         }
     }
 
@@ -65,9 +71,15 @@ public class GithubAwardDataProcessor {
         // ImportIO responds language with "ranking" word, remove it
         languageRank.setLanguage(languageRank.getLanguage().replace(" ranking", "").toLowerCase());
 
-        languageRank.setCityRank(languageRank.getCityRank().replaceAll(" ", ""));
-        languageRank.setCountryRank(languageRank.getCountryRank().replaceAll(" ", ""));
-        languageRank.setWorldwideRank(languageRank.getWorldwideRank().replaceAll(" ", ""));
+        if (StringUtils.isNotEmpty(languageRank.getCityRank())) {
+            languageRank.setCityRank(languageRank.getCityRank().replaceAll(" ", ""));
+        }
+        if (StringUtils.isNotEmpty(languageRank.getCountryRank())) {
+            languageRank.setCountryRank(languageRank.getCountryRank().replaceAll(" ", ""));
+        }
+        if (StringUtils.isNotEmpty(languageRank.getWorldwideRank())) {
+            languageRank.setWorldwideRank(languageRank.getWorldwideRank().replaceAll(" ", ""));
+        }
     }
 
 
