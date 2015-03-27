@@ -31,6 +31,7 @@
         <groovy.version>2.3.5</groovy.version>
         <spring-data-jpa.version>1.7.0.RELEASE</spring-data-jpa.version>
         <spring-data-elasticsearch>1.1.0.RELEASE</spring-data-elasticsearch>
+        <commons-lang3.version>3.3.2</commons-lang3.version>
     </properties>
 
     <dependencies>
@@ -155,6 +156,12 @@
             <groupId>org.springframework.data</groupId>
             <artifactId>spring-data-elasticsearch</artifactId>
             <version>${spring-data-elasticsearch}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>${commons-lang3.version}</version>
         </dependency>
 
         <dependency>
