@@ -3,7 +3,7 @@ package com.techlooper.utils;
 /**
  * Created by NguyenDangKhoa on 3/27/15.
  */
-public class ImportIOExtractor {
+public class GithubAwardRequest {
 
     private String connectorId;
 
@@ -11,10 +11,13 @@ public class ImportIOExtractor {
 
     private String apiKey;
 
-    public ImportIOExtractor(String connectorId, String userId, String apiKey) {
+    private String inputUrl;
+
+    public GithubAwardRequest(String connectorId, String userId, String apiKey, String inputUrl) {
         this.connectorId = connectorId;
         this.userId = userId;
         this.apiKey = apiKey;
+        this.inputUrl = inputUrl;
     }
 
     public String getConnectorId() {
@@ -39,5 +42,13 @@ public class ImportIOExtractor {
 
     public void setApiKey(String apiKey) {
         this.apiKey = apiKey;
+    }
+
+    public String getInputUrl() {
+        return inputUrl;
+    }
+
+    public void setInputUrl(String inputUrl) {
+        this.inputUrl = inputUrl;
     }
 }

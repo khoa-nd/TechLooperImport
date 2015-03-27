@@ -10,12 +10,12 @@ import java.net.URLEncoder;
  */
 public class ImportIOConnection {
 
-    public static GithubAwardResponse fetchContent(ImportIOExtractor extractor, String inputUrl) throws Exception {
+    public static GithubAwardResponse fetchContent(GithubAwardRequest extractor) throws Exception {
         String encodedAPIKey = URLEncoder.encode(extractor.getApiKey(), "UTF-8");
-        inputUrl = URLEncoder.encode(inputUrl, "UTF-8");
+        String encodedInputUrl = URLEncoder.encode(extractor.getInputUrl(), "UTF-8");
 
         String requestUrl = String.format("https://api.import.io/store/data/%s/_query?_user=%s&_apikey=%s&input/webpage/url=%s",
-                extractor.getConnectorId(), extractor.getUserId(), encodedAPIKey, inputUrl);
+                extractor.getConnectorId(), extractor.getUserId(), encodedAPIKey, encodedInputUrl);
         String responseContent = Unirest.get(requestUrl).asString().getBody();
         return JsonUtils.toPOJO(responseContent, GithubAwardResponse.class).get();
     }

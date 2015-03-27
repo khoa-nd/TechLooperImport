@@ -95,10 +95,26 @@ appender("VIETNAMWORKS_IMPORT", RollingFileAppender) {
     }
 }
 
+appender("GITHUB_AWARD_ENRICH", RollingFileAppender) {
+    file = "github_award_enrich.log"
+    rollingPolicy(FixedWindowRollingPolicy) {
+        fileNamePattern = "github_award_enrich_%i.log"
+        minIndex = 1
+        maxIndex = 24
+    }
+    triggeringPolicy(SizeBasedTriggeringPolicy) {
+        maxFileSize = "12MB"
+    }
+    encoder(PatternLayoutEncoder) {
+        pattern = "%d{dd-MM-yyyy HH:mm:ss.SSS} %p [%t] %c{1}: %m%n"
+    }
+}
+
 logger("com.techlooper.crawlers.GitHubUserCrawler", ALL, ["CONSOLE", "CRAWLERS"], Boolean.FALSE)
 logger("com.techlooper.imports.GitHubUserProfileEnricher", ALL, ["CONSOLE", "ENRICHER"], Boolean.FALSE)
 logger("com.techlooper.imports.GitHubUserImport", ALL, ["CONSOLE", "IMPORT"], Boolean.FALSE)
 logger("com.techlooper.utils.PropertyManager", ALL, ["CONSOLE", "PROPERTIES"], Boolean.FALSE)
 logger("com.techlooper.imports.VietnamworksUserImport", ALL, ["CONSOLE", "VIETNAMWORKS_IMPORT"], Boolean.FALSE)
+logger("com.techlooper.crawlers.GithubAwardUserCrawler", ALL, ["CONSOLE", "GITHUB_AWARD_ENRICH"], Boolean.FALSE)
 
 root(ERROR, ["CONSOLE", "ROOT"])

@@ -16,6 +16,7 @@ import javax.annotation.Resource;
  */
 @Configuration
 @ComponentScan(basePackages = "com.techlooper.service")
+@EnableElasticsearchRepositories(basePackages = "com.techlooper.repository")
 @PropertySources({
         @PropertySource("classpath:application.properties")
 })
