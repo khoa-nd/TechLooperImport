@@ -91,7 +91,7 @@ public class GithubAwardUserService {
                     githubAwardDataProcessor.process(userImportEntity, githubAwardResponse);
                     userImportRepository.save(userImportEntity);
                     countSuccess++;
-                    LOGGER.error("User " + githubUsername + " Has Been Enriched Successfully.");
+                    LOGGER.info("User " + githubUsername + " Has Been Enriched Successfully.");
                 } catch (Exception ex) {
                     LOGGER.error("Enrich User " + githubUsername + " Fail", ex);
                 } finally {
