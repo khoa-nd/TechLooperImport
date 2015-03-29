@@ -81,10 +81,10 @@ public class GithubAwardUserService {
                     GithubAwardResponse githubAwardResponse = ImportIOConnection.fetchContent(extractor);
 
                     if (StringUtils.isNotEmpty(githubAwardResponse.getError())) {
-                        LOGGER.error("Enrich User " + githubUsername + " Fail Due To ImportID. " + githubAwardResponse.getError());
+                        LOGGER.info("Enrich User " + githubUsername + " Fail Due To ImportID. " + githubAwardResponse.getError());
                         continue;
                     } else if (githubAwardResponse.getResults().isEmpty()) {
-                        LOGGER.error("User " + githubUsername + " Doesn't Have Information.");
+                        LOGGER.info("User " + githubUsername + " Doesn't Have Information.");
                         continue;
                     }
 
