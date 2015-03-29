@@ -13,6 +13,7 @@ import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.index.query.FilterBuilder;
 import org.elasticsearch.index.query.FilterBuilders;
+import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHitField;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -70,12 +71,15 @@ public class GitHubUserProfileEnricher {
     public static void main(String[] args) throws IOException {
         Utils.sureFolder(outputDirectory);
         ExecutorService executorService = Executors.newFixedThreadPool(fixedThreadPool);
+        final String[] countries = {"vietnam", "japan", "thailand", "myanmar", "singapore", "malaysia", "indonesia","cambodia", "australia", "china", "india", "korea", "taiwan",
+                "spain", "ukraine", "poland", "russia", "bulgaria", "turkey", "greece", "serbia", "romania", "belarus", "lithuania", "estonia",
+                "italy", "portugal", "colombia", "brazil", "chile", "argentina", "venezuela", "bolivia", "mexico"};
         if (retry) {
             doRetry(executorService);
         } else {
             FootPrint footPrint = Utils.readFootPrint(footPrintFilePath);
-            while(true) {
-                queryES(footPrint, executorService);
+            for(String country : countries) {
+                queryES(country, footPrint, executorService);
             }
         }
         executorService.shutdown();
@@ -83,7 +87,7 @@ public class GitHubUserProfileEnricher {
         LOGGER.debug("DONE DONE DONE!!!!!");
     }
 
-    private static void queryES(FootPrint footPrint, ExecutorService executorService) throws IOException {
+    private static void queryES(String country, FootPrint footPrint, ExecutorService executorService) throws IOException {
         Client client = Utils.esClient();
         SearchRequestBuilder searchRequestBuilder = client.prepareSearch(esIndex).setSearchType(SearchType.COUNT);
 
@@ -91,6 +95,8 @@ public class GitHubUserProfileEnricher {
             searchRequestBuilder.setPostFilter(userHasntDescriptionFilterBuilder);
         }
 
+        searchRequestBuilder.setQuery(QueryBuilders.nestedQuery("profiles",
+                QueryBuilders.matchQuery("profiles.GITHUB.location", country)));
         SearchResponse response = searchRequestBuilder.setSearchType(SearchType.COUNT).execute().actionGet();
 
         long totalUsers = response.getHits().getTotalHits();
@@ -99,7 +105,7 @@ public class GitHubUserProfileEnricher {
         int lastPageNumber = footPrint.getLastPageNumber();
         for (int pageNumber = lastPageNumber; pageNumber < maxPageNumber; pageNumber++) {
             try {
-                doQuery(pageNumber, executorService);
+                doQuery(country, pageNumber, executorService);
                 Utils.writeFootPrint(footPrintFilePath, FootPrint.FootPrintBuilder.footPrint().withLastPageNumber(pageNumber).build());
             } catch (Exception e) {
                 LOGGER.error("ERROR", e);
@@ -151,7 +157,7 @@ public class GitHubUserProfileEnricher {
         postUsers2API(executorService, jsonFilePath, jsonUsers);
     }
 
-    private static void doQuery(int pageNumber, ExecutorService executorService) throws IOException, InterruptedException {
+    private static void doQuery(String country, int pageNumber, ExecutorService executorService) throws IOException, InterruptedException {
         LOGGER.debug("New query ES page created {}", pageNumber);
         String filename = String.format("%sgithub.post.p.%d.json", outputDirectory, pageNumber);
         if (new File(filename + ".ok").exists()) {
@@ -160,7 +166,7 @@ public class GitHubUserProfileEnricher {
         }
 
         File jsonFile = new File(filename);
-        ArrayNode jsonUsers = jsonFile.exists() ? (ArrayNode) Utils.parseJson(jsonFile) : crawlUsersProfile(pageNumber, executorService, filename);
+        ArrayNode jsonUsers = jsonFile.exists() ? (ArrayNode) Utils.parseJson(jsonFile) : crawlUsersProfile(country, pageNumber, executorService, filename);
         if (jsonUsers.size() == 0) {
             return;
         }
@@ -188,9 +194,11 @@ public class GitHubUserProfileEnricher {
         });
     }
 
-    private static ArrayNode crawlUsersProfile(int pageNumber, ExecutorService executorService, String filename) throws InterruptedException, IOException {
+    private static ArrayNode crawlUsersProfile(String country, int pageNumber, ExecutorService executorService, String filename) throws InterruptedException, IOException {
         Client client = Utils.esClient();
         SearchRequestBuilder searchRequestBuilder = client.prepareSearch(esIndex).setSearchType(SearchType.DFS_QUERY_THEN_FETCH)
+                .setQuery(QueryBuilders.nestedQuery("profiles",
+                        QueryBuilders.matchQuery("profiles.GITHUB.location", country)))
                 .setFrom(pageNumber * pageSize).setSize(pageSize).addField("profiles.GITHUB.username");
         if (filterUsersHasntDescription) {
             searchRequestBuilder.setPostFilter(userHasntDescriptionFilterBuilder);
