@@ -116,5 +116,6 @@ logger("com.techlooper.imports.GitHubUserImport", ALL, ["CONSOLE", "IMPORT"], Bo
 logger("com.techlooper.utils.PropertyManager", ALL, ["CONSOLE", "PROPERTIES"], Boolean.FALSE)
 logger("com.techlooper.imports.VietnamworksUserImport", ALL, ["CONSOLE", "VIETNAMWORKS_IMPORT"], Boolean.FALSE)
 logger("com.techlooper.crawlers.GithubAwardUserCrawler", ALL, ["CONSOLE", "GITHUB_AWARD_ENRICH"], Boolean.FALSE)
+logger("com.techlooper.service.GithubAwardUserService", ALL, ["CONSOLE", "GITHUB_AWARD_ENRICH"], Boolean.FALSE)
 
 root(ERROR, ["CONSOLE", "ROOT"])
