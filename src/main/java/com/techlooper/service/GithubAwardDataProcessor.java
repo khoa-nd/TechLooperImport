@@ -53,7 +53,8 @@ public class GithubAwardDataProcessor {
                 }
 
                 //add new skills if they haven't had it yet
-                if (!currentSkills.contains(StringUtils.capitalize(languageRank.getLanguage()))) {
+                if (!currentSkills.contains(languageRank.getLanguage().toLowerCase()) &&
+                        !currentSkills.contains(languageRank.getLanguage())) {
                     currentSkills.add(languageRank.getLanguage());
                 }
             }
