@@ -95,9 +95,9 @@ public class Utils {
         }
         tryAgain = false;
 
-        if (root.size() == 0) {
-          LOGGER.debug("Empty result, query {}", queryUrl);
-        }
+//        if (root.size() == 0) {
+//          LOGGER.debug("Empty result, query {}", queryUrl);
+//        }
 
         LOGGER.debug("OK => Consuming query {}...", queryUrl);
         consumer.accept(root);
@@ -131,7 +131,7 @@ public class Utils {
     queryUrl = JsonNodeFactory.instance.objectNode()
       .set("input", JsonNodeFactory.instance.objectNode()
         .put("webpage/url", queryUrl)).toString();
-    return Unirest.post(url).body(new com.mashape.unirest.http.JsonNode(queryUrl)).asString().getBody();
+    return postAndReadContent(url, queryUrl);// Unirest.post(url).body(new com.mashape.unirest.http.JsonNode(queryUrl)).asString().getBody();
   }
 
   public static void sureFolder(String... dirPaths) {
@@ -160,7 +160,7 @@ public class Utils {
     return client;
   }
 
-  public static int postAndGetStatus(String url, String json) throws IOException, UnirestException {
+  public static int postAndGetStatus(String url, String json) throws IOException {
 //    int rsp = Unirest.post(url).header("Content-Type", "application/json").body(json).asString().getStatus();
 //    LOGGER.debug("Response code of url {} ", rsp);
 //    return rsp;
@@ -200,7 +200,7 @@ public class Utils {
     return content;
   }
 
-  public static int postAndGetStatus(String url, JsonNode jsonNode) throws IOException, UnirestException {
+  public static int postAndGetStatus(String url, JsonNode jsonNode) throws IOException {
     return postAndGetStatus(url, jsonNode.toString());
   }
 

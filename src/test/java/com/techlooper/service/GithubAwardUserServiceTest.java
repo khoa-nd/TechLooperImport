@@ -16,18 +16,23 @@ import static org.junit.Assert.assertTrue;
 @ContextConfiguration(classes = {ElasticsearchUserImportConfiguration.class})
 public class GithubAwardUserServiceTest {
 
-    @Resource
-    private GithubAwardUserService githubAwardUserService;
+  @Resource
+  private GithubAwardUserService githubAwardUserService;
 
-    @Test
-    public void testGetUserByCountry() throws Exception {
-        List<UserImportEntity> userImportEntities = githubAwardUserService.getUserByCountry("vietnam", 0);
-        assertTrue(userImportEntities.size() > 0);
-    }
+//  @Test
+  public void testGetUserByCountry() throws Exception {
+    List<UserImportEntity> userImportEntities = githubAwardUserService.getUserByCountry("vietnam", 0);
+    assertTrue(userImportEntities.size() > 0);
+  }
 
-    @Test
-    public void testCountTotalNumberOfUserByCountry() throws Exception {
-        long total = githubAwardUserService.getTotalPageOfUserByCountry("vietnam");
-        assertTrue(total > 0);
-    }
+//  @Test
+  public void testCountTotalNumberOfUserByCountry() throws Exception {
+    long total = githubAwardUserService.getTotalPageOfUserByCountry("vietnam");
+    assertTrue(total > 0);
+  }
+
+//  @Test
+  public void testCrawlNewUser() {
+    githubAwardUserService.crawlNewUser("laos");
+  }
 }

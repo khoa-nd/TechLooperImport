@@ -3,6 +3,7 @@ package com.techlooper.configuration;
 import org.elasticsearch.client.transport.TransportClient;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.context.annotation.*;
+import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import org.springframework.core.env.Environment;
 import org.springframework.data.elasticsearch.client.TransportClientFactoryBean;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
@@ -40,4 +41,10 @@ public class ElasticsearchUserImportConfiguration {
     public ElasticsearchOperations elasticsearchTemplate() {
         return new ElasticsearchTemplate(transportClient);
     }
+
+    @Bean
+    public static PropertySourcesPlaceholderConfigurer propertySourcesPlaceholderConfigurer() {
+        return new PropertySourcesPlaceholderConfigurer();
+    }
+
 }
