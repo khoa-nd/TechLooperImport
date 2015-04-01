@@ -1,11 +1,12 @@
 package com.techlooper.service;
 
 import com.techlooper.configuration.ElasticsearchUserImportConfiguration;
+import com.techlooper.configuration.ElasticsearchVietnamworksConfiguration;
 import com.techlooper.entity.CompanyEntity;
 import com.techlooper.entity.JobEntity;
 import com.techlooper.entity.VietnamworksCompanyEntity;
 import com.techlooper.pojo.Job;
-import com.techlooper.repository.VietnamworksCompanyRepository;
+import com.techlooper.repository.vietnamworks.VietnamworksCompanyRepository;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.test.context.ContextConfiguration;
@@ -15,10 +16,8 @@ import javax.annotation.Resource;
 
 import java.util.List;
 
-import static org.junit.Assert.*;
-
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = {ElasticsearchUserImportConfiguration.class})
+@ContextConfiguration(classes = {ElasticsearchUserImportConfiguration.class, ElasticsearchVietnamworksConfiguration.class})
 public class CompanyServiceTest {
 
     @Resource

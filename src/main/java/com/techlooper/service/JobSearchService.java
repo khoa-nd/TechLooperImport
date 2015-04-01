@@ -24,29 +24,29 @@ public class JobSearchService {
     private static final int TOTAL_USER_PER_PAGE = 100;
 
     @Resource
-    private ElasticsearchTemplate elasticsearchTemplate;
+    private ElasticsearchTemplate elasticsearchTemplateVietnamworks;
 
     public List<JobEntity> getITJob(int pageIndex) {
         SearchQuery searchQuery = getITJobSearchQuery(pageIndex);
-        Page<JobEntity> jobEntities = elasticsearchTemplate.queryForPage(searchQuery, JobEntity.class);
+        Page<JobEntity> jobEntities = elasticsearchTemplateVietnamworks.queryForPage(searchQuery, JobEntity.class);
         return jobEntities.getContent();
     }
 
     public long countITJob() {
         SearchQuery searchQuery = getITJobSearchQuery(0);
-        Page<JobEntity> jobEntities = elasticsearchTemplate.queryForPage(searchQuery, JobEntity.class);
+        Page<JobEntity> jobEntities = elasticsearchTemplateVietnamworks.queryForPage(searchQuery, JobEntity.class);
         return jobEntities.getTotalElements();
     }
 
     public List<JobEntity> getJobHasBenefit(int pageIndex) {
         SearchQuery searchQuery = getJobHasBenefitSearchQuery(pageIndex);
-        Page<JobEntity> jobEntities = elasticsearchTemplate.queryForPage(searchQuery, JobEntity.class);
+        Page<JobEntity> jobEntities = elasticsearchTemplateVietnamworks.queryForPage(searchQuery, JobEntity.class);
         return jobEntities.getContent();
     }
 
     public List<JobEntity> getJobHasSkill(int pageIndex) {
         SearchQuery searchQuery = getJobHasSkillSearchQuery(pageIndex);
-        Page<JobEntity> jobEntities = elasticsearchTemplate.queryForPage(searchQuery, JobEntity.class);
+        Page<JobEntity> jobEntities = elasticsearchTemplateVietnamworks.queryForPage(searchQuery, JobEntity.class);
         return jobEntities.getContent();
     }
 

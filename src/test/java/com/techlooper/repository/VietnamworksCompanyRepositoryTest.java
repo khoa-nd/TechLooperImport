@@ -1,6 +1,7 @@
 package com.techlooper.repository;
 
 import com.techlooper.configuration.ElasticsearchUserImportConfiguration;
+import com.techlooper.repository.vietnamworks.VietnamworksCompanyRepository;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.test.context.ContextConfiguration;

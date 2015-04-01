@@ -1,4 +1,4 @@
-package com.techlooper.repository;
+package com.techlooper.repository.vietnamworks;
 
 import com.techlooper.entity.CompanyEntity;
 import com.techlooper.entity.VietnamworksCompanyEntity;
