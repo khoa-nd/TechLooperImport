@@ -1,6 +1,7 @@
 package com.techlooper.entity;
 
 import com.techlooper.pojo.Benefit;
+import com.techlooper.pojo.Industry;
 import com.techlooper.pojo.Job;
 import com.techlooper.pojo.Skill;
 import org.springframework.data.annotation.Id;
@@ -22,6 +23,21 @@ public class CompanyEntity {
     private Long companyId;
 
     @Field
+    private String companyLogoURL;
+
+    @Field
+    private String companyName;
+
+    @Field
+    private int companySizeId;
+
+    @Field
+    private String website;
+
+    @Field
+    private String address;
+
+    @Field
     private Set<Benefit> benefits;
 
     @Field
@@ -30,12 +46,55 @@ public class CompanyEntity {
     @Field
     private Set<Job> jobs;
 
+    @Field
+    private Set<Industry> industries;
+
     public Long getCompanyId() {
         return companyId;
     }
 
     public void setCompanyId(Long companyId) {
         this.companyId = companyId;
+    }
+
+    public String getCompanyLogoURL() {
+        return companyLogoURL;
+    }
+
+    public void setCompanyLogoURL(String companyLogoURL) {
+        this.companyLogoURL = companyLogoURL;
+    }
+
+    public String getCompanyName() {
+        return companyName;
+    }
+
+    public void setCompanyName(String companyName) {
+        this.companyName = companyName;
+    }
+
+    public int getCompanySizeId() {
+        return companySizeId;
+    }
+
+    public void setCompanySizeId(int companySizeId) {
+        this.companySizeId = companySizeId;
+    }
+
+    public String getWebsite() {
+        return website;
+    }
+
+    public void setWebsite(String website) {
+        this.website = website;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
     }
 
     public Set<Benefit> getBenefits() {
@@ -62,18 +121,33 @@ public class CompanyEntity {
         this.jobs = jobs;
     }
 
-    public void addBenefit(List<Benefit> benefits) {
+    public Set<Industry> getIndustries() {
+        return industries;
+    }
+
+    public void setIndustries(Set<Industry> industries) {
+        this.industries = industries;
+    }
+
+    public void addBenefit(Set<Benefit> benefits) {
         if (this.benefits == null) {
             this.benefits = new HashSet<>();
         }
         this.benefits.addAll(benefits);
     }
 
-    public void addSkill(List<Skill> skills) {
+    public void addSkill(Set<Skill> skills) {
         if (this.skills == null) {
             this.skills = new HashSet<>();
         }
         this.skills.addAll(skills);
+    }
+
+    public void addJob(Set<Job> jobs) {
+        if (this.jobs == null) {
+            this.jobs = new HashSet<>();
+        }
+        this.jobs.addAll(jobs);
     }
 
     public void addJob(Job job) {
@@ -81,5 +155,12 @@ public class CompanyEntity {
             this.jobs = new HashSet<>();
         }
         this.jobs.add(job);
+    }
+
+    public void addIndustry(Set<Industry> industries) {
+        if (this.industries == null) {
+            this.industries = new HashSet<>();
+        }
+        this.industries.addAll(industries);
     }
 }

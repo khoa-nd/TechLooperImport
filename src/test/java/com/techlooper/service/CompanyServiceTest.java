@@ -3,7 +3,9 @@ package com.techlooper.service;
 import com.techlooper.configuration.ElasticsearchUserImportConfiguration;
 import com.techlooper.entity.CompanyEntity;
 import com.techlooper.entity.JobEntity;
+import com.techlooper.entity.VietnamworksCompanyEntity;
 import com.techlooper.pojo.Job;
+import com.techlooper.repository.VietnamworksCompanyRepository;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.test.context.ContextConfiguration;
@@ -25,6 +27,9 @@ public class CompanyServiceTest {
     @Resource
     private JobSearchService jobSearchService;
 
+    @Resource
+    private VietnamworksCompanyRepository vietnamworksCompanyRepository;
+
     @Test
     public void testAddCompany() throws Exception {
         List<JobEntity> jobEntities = jobSearchService.getJobHasBenefit(0);
@@ -37,7 +42,16 @@ public class CompanyServiceTest {
             companyEntity.addSkill(jobEntity.getSkills());
             String jobURL = "/" + jobEntity.getAlias() + "-" + jobEntity.getJobId() + "-jd";
             companyEntity.addJob(new Job(jobEntity.getJobId(), jobEntity.getJobTitle(), jobURL, jobEntity.getExpiredDate()));
+            companyEntity.addIndustry(jobEntity.getIndustries());
 
+            VietnamworksCompanyEntity vietnamworksCompanyEntity = vietnamworksCompanyRepository.findOne(jobEntity.getCompanyId());
+            if (vietnamworksCompanyEntity != null) {
+                companyEntity.setCompanyLogoURL(vietnamworksCompanyEntity.getCompanyLogoURL());
+                companyEntity.setCompanyName(vietnamworksCompanyEntity.getCompanyName());
+                companyEntity.setCompanySizeId(vietnamworksCompanyEntity.getCompanySizeId());
+                companyEntity.setWebsite(vietnamworksCompanyEntity.getWebsite());
+                companyEntity.setAddress(vietnamworksCompanyEntity.getAddress());
+            }
             companyService.addCompany(companyEntity);
         }
     }

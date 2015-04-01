@@ -1,15 +1,14 @@
 package com.techlooper.entity;
 
 import com.techlooper.pojo.Benefit;
+import com.techlooper.pojo.Industry;
 import com.techlooper.pojo.Skill;
-import org.elasticsearch.common.joda.time.DateTime;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 
-import java.util.Date;
-import java.util.List;
+import java.util.Set;
 
 import static org.springframework.data.elasticsearch.annotations.FieldType.Long;
 
@@ -32,10 +31,13 @@ public class JobEntity {
     private long companyId;
 
     @Field
-    private List<Benefit> benefits;
+    private Set<Benefit> benefits;
 
     @Field
-    private List<Skill> skills;
+    private Set<Skill> skills;
+
+    @Field
+    private Set<Industry> industries;
 
     @Field(type = FieldType.String)
     private String expiredDate;
@@ -72,20 +74,28 @@ public class JobEntity {
         this.companyId = companyId;
     }
 
-    public List<Benefit> getBenefits() {
+    public Set<Benefit> getBenefits() {
         return benefits;
     }
 
-    public void setBenefits(List<Benefit> benefits) {
+    public void setBenefits(Set<Benefit> benefits) {
         this.benefits = benefits;
     }
 
-    public List<Skill> getSkills() {
+    public Set<Skill> getSkills() {
         return skills;
     }
 
-    public void setSkills(List<Skill> skills) {
+    public void setSkills(Set<Skill> skills) {
         this.skills = skills;
+    }
+
+    public Set<Industry> getIndustries() {
+        return industries;
+    }
+
+    public void setIndustries(Set<Industry> industries) {
+        this.industries = industries;
     }
 
     public String getExpiredDate() {

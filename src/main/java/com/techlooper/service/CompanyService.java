@@ -21,9 +21,10 @@ public class CompanyService {
         if (existCompany == null) {
             companyRepository.save(company);
         } else {
-            existCompany.getBenefits().addAll(company.getBenefits());
-            existCompany.getSkills().addAll(company.getSkills());
-            existCompany.getJobs().addAll(company.getJobs());
+            existCompany.addBenefit(company.getBenefits());
+            existCompany.addSkill(company.getSkills());
+            existCompany.addJob(company.getJobs());
+            existCompany.addIndustry(company.getIndustries());
             companyRepository.save(existCompany);
         }
     }
