@@ -17,34 +17,35 @@ import javax.annotation.Resource;
  */
 @Configuration
 @ComponentScan(basePackages = "com.techlooper.service")
-@EnableElasticsearchRepositories(basePackages = "com.techlooper.repository")
+@EnableElasticsearchRepositories(basePackages = "com.techlooper.repository.vietnamworks",
+        elasticsearchTemplateRef = "elasticsearchTemplateVietnamworks")
 @PropertySources({
         @PropertySource("classpath:application.properties")
 })
-public class ElasticsearchUserImportConfiguration {
+public class ElasticsearchVietnamworksConfiguration {
 
     @Resource
     private Environment environment;
 
     @Resource
-    private TransportClient transportClient;
-
-    @Bean
-    public FactoryBean<TransportClient> transportClient() throws Exception {
-        TransportClientFactoryBean factory = new TransportClientFactoryBean();
-        factory.setClusterName(environment.getProperty("es.userimport.cluster.name"));
-        factory.setClusterNodes(environment.getProperty("es.userimport.host"));
-        return factory;
-    }
-
-    @Bean
-    public ElasticsearchOperations elasticsearchTemplate() {
-        return new ElasticsearchTemplate(transportClient);
-    }
+    private TransportClient vietnamworksTransportClient;
 
     @Bean
     public static PropertySourcesPlaceholderConfigurer propertySourcesPlaceholderConfigurer() {
         return new PropertySourcesPlaceholderConfigurer();
+    }
+
+    @Bean
+    public FactoryBean<TransportClient> vietnamworksTransportClient() throws Exception {
+        TransportClientFactoryBean factory = new TransportClientFactoryBean();
+        factory.setClusterName(environment.getProperty("es.vietnamworks.cluster.name"));
+        factory.setClusterNodes(environment.getProperty("es.vietnamworks.host"));
+        return factory;
+    }
+
+    @Bean
+    public ElasticsearchOperations elasticsearchTemplateVietnamworks() {
+        return new ElasticsearchTemplate(vietnamworksTransportClient);
     }
 
 }
