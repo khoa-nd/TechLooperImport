@@ -21,7 +21,7 @@ import static org.elasticsearch.index.query.QueryBuilders.nestedQuery;
 @Service
 public class JobSearchService {
 
-    private static final int TOTAL_USER_PER_PAGE = 100;
+    public static final int TOTAL_USER_PER_PAGE = 50;
 
     @Resource
     private ElasticsearchTemplate elasticsearchTemplateVietnamworks;
