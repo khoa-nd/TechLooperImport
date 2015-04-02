@@ -2,10 +2,7 @@ package com.techlooper.service;
 
 import com.techlooper.entity.CompanyEntity;
 import com.techlooper.entity.JobEntity;
-import com.techlooper.entity.VietnamworksCompanyEntity;
-import com.techlooper.pojo.Job;
 import com.techlooper.repository.CompanyRepository;
-import com.techlooper.repository.vietnamworks.VietnamworksCompanyRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -28,7 +25,7 @@ public class CompanyService {
     private JobSearchService jobSearchService;
 
     @Resource
-    private VietnamworksCompanyRepository vietnamworksCompanyRepository;
+    private CompanyDataProcessor companyDataProcessor;
 
     public void addCompany(CompanyEntity company) {
         CompanyEntity existCompany = companyRepository.findOne(company.getCompanyId());
@@ -44,40 +41,28 @@ public class CompanyService {
         }
     }
 
-    public void runImport() {
+    public int runImportCompany() {
         long totalITJob = jobSearchService.countITJob();
         long totalPage = totalITJob % JobSearchService.TOTAL_USER_PER_PAGE == 0 ?
                 totalITJob / JobSearchService.TOTAL_USER_PER_PAGE : totalITJob / JobSearchService.TOTAL_USER_PER_PAGE + 1;
         int pageIndex = 0;
+        int successCompanyAdd = 0;
 
-        while(pageIndex < totalPage) {
+        while (pageIndex < totalPage) {
             List<JobEntity> jobEntities = jobSearchService.getITJob(pageIndex);
 
-            for(JobEntity jobEntity : jobEntities) {
-                CompanyEntity companyEntity = new CompanyEntity();
+            for (JobEntity jobEntity : jobEntities) {
                 try {
-                    companyEntity.setCompanyId(jobEntity.getCompanyId());
-                    companyEntity.addBenefit(jobEntity.getBenefits());
-                    companyEntity.addSkill(jobEntity.getSkills());
-                    String jobURL = "/" + jobEntity.getAlias() + "-" + jobEntity.getJobId() + "-jd";
-                    companyEntity.addJob(new Job(jobEntity.getJobId(), jobEntity.getJobTitle(), jobURL, jobEntity.getExpiredDate()));
-                    companyEntity.addIndustry(jobEntity.getIndustries());
-
-                    VietnamworksCompanyEntity vietnamworksCompanyEntity = vietnamworksCompanyRepository.findOne(jobEntity.getCompanyId());
-                    if (vietnamworksCompanyEntity != null) {
-                        companyEntity.setCompanyLogoURL(vietnamworksCompanyEntity.getCompanyLogoURL());
-                        companyEntity.setCompanyName(vietnamworksCompanyEntity.getCompanyName());
-                        companyEntity.setCompanySizeId(vietnamworksCompanyEntity.getCompanySizeId());
-                        companyEntity.setWebsite(vietnamworksCompanyEntity.getWebsite());
-                        companyEntity.setAddress(vietnamworksCompanyEntity.getAddress());
-                    }
+                    CompanyEntity companyEntity = companyDataProcessor.process(jobEntity);
                     addCompany(companyEntity);
                     LOGGER.info("Import " + companyEntity.getCompanyName() + " OK.");
+                    successCompanyAdd++;
                 } catch (Exception ex) {
-                    LOGGER.info("Import " + companyEntity.getCompanyName() + " Fail." + ex.getMessage());
+                    LOGGER.info("Import " + jobEntity.getCompanyId() + " Fail." + ex.getMessage());
                 }
             }
             pageIndex++;
         }
+        return successCompanyAdd;
     }
 }

@@ -7,7 +7,7 @@ import java.util.Date;
  */
 public class Job {
 
-    private String jobId;
+    private Long jobId;
 
     private String jobTitle;
 
@@ -18,18 +18,18 @@ public class Job {
     public Job() {
     }
 
-    public Job(String jobId, String jobTitle, String jobURL, String expiredDate) {
+    public Job(Long jobId, String jobTitle, String jobURL, String expiredDate) {
         this.jobId = jobId;
         this.jobTitle = jobTitle;
         this.jobURL = jobURL;
         this.expiredDate = expiredDate;
     }
 
-    public String getJobId() {
+    public Long getJobId() {
         return jobId;
     }
 
-    public void setJobId(String jobId) {
+    public void setJobId(Long jobId) {
         this.jobId = jobId;
     }
 

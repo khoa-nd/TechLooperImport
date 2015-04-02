@@ -19,7 +19,7 @@ import static org.springframework.data.elasticsearch.annotations.FieldType.Long;
 public class JobEntity {
 
     @Id
-    private String jobId;
+    private Long jobId;
 
     @Field
     private String alias;
@@ -42,11 +42,11 @@ public class JobEntity {
     @Field(type = FieldType.String)
     private String expiredDate;
 
-    public String getJobId() {
+    public Long getJobId() {
         return jobId;
     }
 
-    public void setJobId(String jobId) {
+    public void setJobId(Long jobId) {
         this.jobId = jobId;
     }
 

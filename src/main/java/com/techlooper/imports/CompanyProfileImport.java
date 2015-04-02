@@ -23,7 +23,7 @@ public class CompanyProfileImport {
                 ElasticsearchVietnamworksConfiguration.class);
         CompanyService companyService = applicationContext.getBean("companyService", CompanyService.class);
 
-        companyService.runImport();
-        LOGGER.info("Done Import Company");
+        int successCompanyAdd = companyService.runImportCompany();
+        LOGGER.info("Done Import Company " + successCompanyAdd);
     }
 }
