@@ -2,13 +2,26 @@ package com.techlooper.service;
 
 import com.techlooper.entity.CompanyEntity;
 import com.techlooper.entity.JobEntity;
+import com.techlooper.pojo.Industry;
 import com.techlooper.repository.CompanyRepository;
+import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.elasticsearch.core.FacetedPage;
+import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
+import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
+import org.springframework.data.elasticsearch.core.query.SearchQuery;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+
+import static org.elasticsearch.index.query.QueryBuilders.nestedQuery;
 
 /**
  * Created by NguyenDangKhoa on 4/1/15.
@@ -17,6 +30,8 @@ import java.util.List;
 public class CompanyService {
 
     private static Logger LOGGER = LoggerFactory.getLogger(CompanyService.class);
+
+    public static final int TOTAL_USER_PER_PAGE = 50;
 
     @Resource
     private CompanyRepository companyRepository;
@@ -64,5 +79,49 @@ public class CompanyService {
             pageIndex++;
         }
         return successCompanyAdd;
+    }
+
+    private NativeSearchQueryBuilder getCompanySearchAllQuery() {
+        return new NativeSearchQueryBuilder().withQuery(QueryBuilders.matchAllQuery());
+    }
+
+    public long countTotalNumberOfCompany() {
+        SearchQuery searchQuery = getCompanySearchAllQuery().build();
+        return companyRepository.search(searchQuery).getTotalElements();
+    }
+
+    public void removeNonITIndustryInCompanyProfile() {
+        NativeSearchQueryBuilder searchQueryBuilder = getCompanySearchAllQuery();
+        long total = countTotalNumberOfCompany();
+        int pageIndex = 0;
+        int successRemoved = 0;
+        Set<Industry> itIndustries = new HashSet<>();
+        Industry softwareIndustry = new Industry();
+        softwareIndustry.setIndustryId("35");
+        itIndustries.add(softwareIndustry);
+        Industry hardwareIndustry = new Industry();
+        hardwareIndustry.setIndustryId("55");
+        itIndustries.add(hardwareIndustry);
+        Industry internetIndustry = new Industry();
+        internetIndustry.setIndustryId("57");
+        itIndustries.add(internetIndustry);
+
+        while(pageIndex < total) {
+            FacetedPage<CompanyEntity> companyEntities = companyRepository.search(
+                    searchQueryBuilder.withPageable(new PageRequest(pageIndex, TOTAL_USER_PER_PAGE)).build());
+            List<CompanyEntity> companies = companyEntities.getContent();
+
+            for(CompanyEntity company : companies) {
+                company = companyRepository.findOne(18364L);
+                Set<Industry> industries = company.getIndustries();
+                industries.retainAll(itIndustries);
+                company.setIndustries(industries);
+
+                companyRepository.save(company);
+                successRemoved++;
+                LOGGER.info("Company #" + successRemoved + " : " + company.getCompanyName() + " has been removed non-it industry");
+            }
+            pageIndex++;
+        }
     }
 }
