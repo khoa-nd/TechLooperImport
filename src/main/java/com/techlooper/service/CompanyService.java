@@ -112,7 +112,6 @@ public class CompanyService {
             List<CompanyEntity> companies = companyEntities.getContent();
 
             for(CompanyEntity company : companies) {
-                company = companyRepository.findOne(18364L);
                 Set<Industry> industries = company.getIndustries();
                 industries.retainAll(itIndustries);
                 company.setIndustries(industries);
