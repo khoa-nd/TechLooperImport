@@ -26,7 +26,8 @@ public class CompanyDataProcessor {
             companyEntity.addBenefit(jobEntity.getBenefits());
             companyEntity.addSkill(jobEntity.getSkills());
             String jobURL = "/" + jobEntity.getAlias() + "-" + jobEntity.getJobId() + "-jd";
-            companyEntity.addJob(new Job(jobEntity.getJobId(), jobEntity.getJobTitle(), jobURL, jobEntity.getExpiredDate()));
+            companyEntity.addJob(new Job(jobEntity.getJobId(), jobEntity.getJobTitle(), jobURL, jobEntity.getExpiredDate(),
+                    jobEntity.getNumOfViews(), jobEntity.getNumOfApplications()));
             companyEntity.addIndustry(jobEntity.getIndustries());
 
             VietnamworksCompanyEntity vietnamworksCompanyEntity = vietnamworksCompanyRepository.findOne(jobEntity.getCompanyId());

@@ -3,6 +3,7 @@ package com.techlooper.service;
 import com.techlooper.entity.CompanyEntity;
 import com.techlooper.entity.JobEntity;
 import com.techlooper.pojo.Industry;
+import com.techlooper.pojo.Job;
 import com.techlooper.pojo.Skill;
 import com.techlooper.repository.CompanyRepository;
 import org.elasticsearch.index.query.QueryBuilder;
@@ -52,7 +53,9 @@ public class CompanyService {
         } else {
             existCompany.addBenefit(company.getBenefits());
             existCompany.addSkill(company.getSkills());
-            existCompany.addJob(company.getJobs());
+            Set<Job> tmp = company.getJobs();
+            existCompany.getJobs().removeAll(company.getJobs());
+            existCompany.addJob(tmp);
             existCompany.addIndustry(company.getIndustries());
             companyRepository.save(existCompany);
         }
@@ -137,36 +140,17 @@ public class CompanyService {
                     searchQueryBuilder.withPageable(new PageRequest(pageIndex, TOTAL_USER_PER_PAGE)).build());
             List<CompanyEntity> companies = companyEntities.getContent();
 
-
-            //TODO : should move this messy code to data process class or something like that later
             for(CompanyEntity company : companies) {
                 Set<Skill> skills = company.getSkills();
                 if (skills != null && !skills.isEmpty()) {
                     Set<Skill> cloneSkill = new HashSet<>(skills);
                     for(Skill skill : cloneSkill) {
-                        if (skill.getSkillName().contains(";")) {
-                            String[] tokens = skill.getSkillName().trim().split(";");
-                            for(int i = 0; i < tokens.length; i++) {
-                                Skill newSkill = new Skill();
-                                newSkill.setSkillId(skill.getSkillId() + i + 9999);
-                                newSkill.setSkillName(tokens[i]);
-                                newSkill.setSkillWeight(skill.getSkillWeight());
-                                skills.add(newSkill);
-                            }
-                            skills.remove(skill);
-                        } else if (skill.getSkillName().contains(",")) {
-                            String[] tokens = skill.getSkillName().trim().split(",");
-                            for(int i = 0; i < tokens.length; i++) {
-                                Skill newSkill = new Skill();
-                                newSkill.setSkillId(skill.getSkillId() + i + 9999);
-                                newSkill.setSkillName(tokens[i]);
-                                newSkill.setSkillWeight(skill.getSkillWeight());
-                                skills.add(newSkill);
-                            }
-                            skills.remove(skill);
+                        if (skill.getSkillName().contains(";") || skill.getSkillName().contains(",")
+                                || skill.getSkillName().contains("/")) {
+                            processSkillList(skills, skill);
                         }
-                        company.setSkills(skills);
                     }
+                    company.setSkills(skills);
                     companyRepository.save(company);
                     successRemoved++;
                     LOGGER.info("Company #" + successRemoved + " : " + company.getCompanyName() + " has been removed duplicated skills");
@@ -174,5 +158,17 @@ public class CompanyService {
             }
             pageIndex++;
         }
+    }
+
+    private void processSkillList(Set<Skill> skills, Skill skill) {
+        String[] tokens = skill.getSkillName().trim().split(";");
+        for(int i = 0; i < tokens.length; i++) {
+            Skill newSkill = new Skill();
+            newSkill.setSkillId(skill.getSkillId() + i + 9999);
+            newSkill.setSkillName(tokens[i]);
+            newSkill.setSkillWeight(skill.getSkillWeight());
+            skills.add(newSkill);
+        }
+        skills.remove(skill);
     }
 }

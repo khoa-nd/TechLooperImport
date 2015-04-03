@@ -42,6 +42,12 @@ public class JobEntity {
     @Field(type = FieldType.String)
     private String expiredDate;
 
+    @Field
+    private long numOfViews;
+
+    @Field
+    private long numOfApplications;
+
     public Long getJobId() {
         return jobId;
     }
@@ -104,5 +110,21 @@ public class JobEntity {
 
     public void setExpiredDate(String expiredDate) {
         this.expiredDate = expiredDate;
+    }
+
+    public long getNumOfViews() {
+        return numOfViews;
+    }
+
+    public void setNumOfViews(long numOfViews) {
+        this.numOfViews = numOfViews;
+    }
+
+    public long getNumOfApplications() {
+        return numOfApplications;
+    }
+
+    public void setNumOfApplications(long numOfApplications) {
+        this.numOfApplications = numOfApplications;
     }
 }

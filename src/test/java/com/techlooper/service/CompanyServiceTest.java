@@ -40,7 +40,7 @@ public class CompanyServiceTest {
             companyEntity.addBenefit(jobEntity.getBenefits());
             companyEntity.addSkill(jobEntity.getSkills());
             String jobURL = "/" + jobEntity.getAlias() + "-" + jobEntity.getJobId() + "-jd";
-            companyEntity.addJob(new Job(jobEntity.getJobId(), jobEntity.getJobTitle(), jobURL, jobEntity.getExpiredDate()));
+            companyEntity.addJob(new Job(jobEntity.getJobId(), jobEntity.getJobTitle(), jobURL, jobEntity.getExpiredDate(), 100, 10));
             companyEntity.addIndustry(jobEntity.getIndustries());
 
             VietnamworksCompanyEntity vietnamworksCompanyEntity = vietnamworksCompanyRepository.findOne(jobEntity.getCompanyId());
