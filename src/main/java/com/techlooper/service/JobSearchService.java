@@ -57,6 +57,7 @@ public class JobSearchService {
                         .should(QueryBuilders.termQuery("industries.industryId", 35))
                         .should(QueryBuilders.termQuery("industries.industryId", 55))
                         .should(QueryBuilders.termQuery("industries.industryId", 57))))
+                .withFilter(FilterBuilders.rangeFilter("approvedDate").from("now-1w"))
                 .withPageable(new PageRequest(pageIndex, TOTAL_USER_PER_PAGE))
                 .build();
     }
