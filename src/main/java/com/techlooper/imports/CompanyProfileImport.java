@@ -24,6 +24,8 @@ public class CompanyProfileImport {
         CompanyService companyService = applicationContext.getBean("companyService", CompanyService.class);
 
         int successCompanyAdd = companyService.runImportCompany();
+        companyService.removeNonITIndustryInCompanyProfile();
+        companyService.removeDuplicatedSkillInCompanyProfile();
         LOGGER.info("Done Import Company " + successCompanyAdd);
     }
 }
