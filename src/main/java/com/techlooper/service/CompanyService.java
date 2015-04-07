@@ -6,25 +6,20 @@ import com.techlooper.pojo.Industry;
 import com.techlooper.pojo.Job;
 import com.techlooper.pojo.Skill;
 import com.techlooper.repository.CompanyRepository;
-import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.elasticsearch.core.FacetedPage;
-import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.SearchQuery;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
-
-import static org.elasticsearch.index.query.QueryBuilders.nestedQuery;
 
 /**
  * Created by NguyenDangKhoa on 4/1/15.
@@ -61,7 +56,8 @@ public class CompanyService {
         }
     }
 
-    public int runImportCompany() {
+    @Scheduled(cron = "${scheduled.cron.companyImport}")
+    public void runImportCompany() {
         long totalITJob = jobSearchService.countITJob();
         long totalPage = totalITJob % JobSearchService.TOTAL_USER_PER_PAGE == 0 ?
                 totalITJob / JobSearchService.TOTAL_USER_PER_PAGE : totalITJob / JobSearchService.TOTAL_USER_PER_PAGE + 1;
@@ -83,7 +79,10 @@ public class CompanyService {
             }
             pageIndex++;
         }
-        return successCompanyAdd;
+        LOGGER.info("Done. Import all " + successCompanyAdd + " Successfully.");
+        removeNonITIndustryInCompanyProfile();
+        removeDuplicatedSkillInCompanyProfile();
+        LOGGER.info("Done. Cleaning data after import company into ES");
     }
 
     private NativeSearchQueryBuilder getCompanySearchAllQuery() {
@@ -111,12 +110,12 @@ public class CompanyService {
         internetIndustry.setIndustryId("57");
         itIndustries.add(internetIndustry);
 
-        while(pageIndex < total) {
+        while (pageIndex < total) {
             FacetedPage<CompanyEntity> companyEntities = companyRepository.search(
                     searchQueryBuilder.withPageable(new PageRequest(pageIndex, TOTAL_USER_PER_PAGE)).build());
             List<CompanyEntity> companies = companyEntities.getContent();
 
-            for(CompanyEntity company : companies) {
+            for (CompanyEntity company : companies) {
                 Set<Industry> industries = company.getIndustries();
                 industries.retainAll(itIndustries);
                 company.setIndustries(industries);
@@ -135,16 +134,16 @@ public class CompanyService {
         int pageIndex = 0;
         int successRemoved = 0;
 
-        while(pageIndex < total) {
+        while (pageIndex < total) {
             FacetedPage<CompanyEntity> companyEntities = companyRepository.search(
                     searchQueryBuilder.withPageable(new PageRequest(pageIndex, TOTAL_USER_PER_PAGE)).build());
             List<CompanyEntity> companies = companyEntities.getContent();
 
-            for(CompanyEntity company : companies) {
+            for (CompanyEntity company : companies) {
                 Set<Skill> skills = company.getSkills();
                 if (skills != null && !skills.isEmpty()) {
                     Set<Skill> cloneSkill = new HashSet<>(skills);
-                    for(Skill skill : cloneSkill) {
+                    for (Skill skill : cloneSkill) {
                         if (skill.getSkillName().contains(";") || skill.getSkillName().contains(",")
                                 || skill.getSkillName().contains("/")) {
                             processSkillList(skills, skill);
@@ -162,7 +161,7 @@ public class CompanyService {
 
     private void processSkillList(Set<Skill> skills, Skill skill) {
         String[] tokens = skill.getSkillName().trim().split(";");
-        for(int i = 0; i < tokens.length; i++) {
+        for (int i = 0; i < tokens.length; i++) {
             Skill newSkill = new Skill();
             newSkill.setSkillId(skill.getSkillId() + i + 9999);
             newSkill.setSkillName(tokens[i]);
