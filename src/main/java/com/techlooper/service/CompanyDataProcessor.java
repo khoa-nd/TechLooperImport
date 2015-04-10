@@ -57,6 +57,7 @@ public class CompanyDataProcessor {
                 companyEntity.addJobImageURL(vietnamworksCompanyEntity.getJobImageURLs());
                 vietnamworksCompanyEntity.getJobVideoURLs().removeAll(Arrays.asList(null, ""));
                 companyEntity.addJobVideoURL(vietnamworksCompanyEntity.getJobVideoURLs());
+                companyEntity.setCompanyProfile(vietnamworksCompanyEntity.getCompanyProfile());
             }
         } catch (Exception ex) {
             throw ex;

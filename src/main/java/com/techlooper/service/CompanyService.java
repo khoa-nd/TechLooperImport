@@ -56,6 +56,7 @@ public class CompanyService {
             existCompany.addJobImageURL(new ArrayList<>(company.getJobImageURLs()));
             company.getJobVideoURLs().removeAll(Arrays.asList(null, ""));
             existCompany.addJobVideoURL(new ArrayList<>(company.getJobVideoURLs()));
+            existCompany.setCompanyProfile(company.getCompanyProfile());
         }
 
         companyRepository.save(existCompany);

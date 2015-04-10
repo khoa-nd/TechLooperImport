@@ -36,6 +36,9 @@ public class VietnamworksCompanyEntity {
     @Field
     private List<String> jobVideoURLs;
 
+    @Field
+    private String companyProfile;
+
     public Long getCompanyId() {
         return companyId;
     }
@@ -98,5 +101,13 @@ public class VietnamworksCompanyEntity {
 
     public void setJobVideoURLs(List<String> jobVideoURLs) {
         this.jobVideoURLs = jobVideoURLs;
+    }
+
+    public String getCompanyProfile() {
+        return companyProfile;
+    }
+
+    public void setCompanyProfile(String companyProfile) {
+        this.companyProfile = companyProfile;
     }
 }

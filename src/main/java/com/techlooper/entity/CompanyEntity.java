@@ -57,6 +57,9 @@ public class CompanyEntity {
 
     private int score;
 
+    @Field
+    private String companyProfile;
+
     public Long getCompanyId() {
         return companyId;
     }
@@ -159,6 +162,14 @@ public class CompanyEntity {
 
     public void setScore(int score) {
         this.score = score;
+    }
+
+    public String getCompanyProfile() {
+        return companyProfile;
+    }
+
+    public void setCompanyProfile(String companyProfile) {
+        this.companyProfile = companyProfile;
     }
 
     public void addBenefit(Set<Benefit> benefits) {
