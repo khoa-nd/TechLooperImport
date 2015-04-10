@@ -17,6 +17,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -40,11 +41,13 @@ public class CompanyService {
     @Resource
     private CompanyDataProcessor companyDataProcessor;
 
-    public void addCompany(CompanyEntity company) {
+    public void addCompany(CompanyEntity company) throws Exception {
         CompanyEntity existCompany = companyRepository.findOne(company.getCompanyId());
 
         if (existCompany == null) {
-            companyRepository.save(company);
+            existCompany = company;
+            // merge company profile to avoid duplicate company semantically
+            companyDataProcessor.mergeCompanyProfile(existCompany);
         } else {
             existCompany.addBenefit(company.getBenefits());
             existCompany.addSkill(company.getSkills());
@@ -52,8 +55,11 @@ public class CompanyService {
             existCompany.getJobs().removeAll(company.getJobs());
             existCompany.addJob(tmp);
             existCompany.addIndustry(company.getIndustries());
-            companyRepository.save(existCompany);
+            existCompany.addJobImageURL(new ArrayList<>(company.getJobImageURLs()));
+            existCompany.addJobVideoURL(new ArrayList<>(company.getJobVideoURLs()));
         }
+
+        companyRepository.save(existCompany);
     }
 
     @Scheduled(cron = "${scheduled.cron.companyImport}")

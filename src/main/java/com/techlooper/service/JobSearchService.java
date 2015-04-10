@@ -3,6 +3,7 @@ package com.techlooper.service;
 import com.techlooper.entity.JobEntity;
 import org.elasticsearch.index.query.FilterBuilders;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
@@ -22,6 +23,9 @@ import static org.elasticsearch.index.query.QueryBuilders.nestedQuery;
 public class JobSearchService {
 
     public static final int TOTAL_USER_PER_PAGE = 50;
+
+    @Value("${scheduled.cron.companyImport.importAll}")
+    private boolean isImportAll;
 
     @Resource
     private ElasticsearchTemplate elasticsearchTemplateVietnamworks;
@@ -51,13 +55,17 @@ public class JobSearchService {
     }
 
     private SearchQuery getITJobSearchQuery(int pageIndex) {
-        return new NativeSearchQueryBuilder()
+        NativeSearchQueryBuilder searchQueryBuilder = new NativeSearchQueryBuilder()
                 .withQuery(nestedQuery("industries", QueryBuilders.boolQuery()
                         .minimumNumberShouldMatch(1)
                         .should(QueryBuilders.termQuery("industries.industryId", 35))))
-                .withFilter(FilterBuilders.rangeFilter("approvedDate").from("now-1w"))
-                .withPageable(new PageRequest(pageIndex, TOTAL_USER_PER_PAGE))
-                .build();
+                .withPageable(new PageRequest(pageIndex, TOTAL_USER_PER_PAGE));
+        if (isImportAll) {
+            searchQueryBuilder.withFilter(FilterBuilders.matchAllFilter());
+        } else {
+            searchQueryBuilder.withFilter(FilterBuilders.rangeFilter("approvedDate").from("now-1w"));
+        }
+        return searchQueryBuilder.build();
     }
 
     private SearchQuery getJobHasBenefitSearchQuery(int pageIndex) {

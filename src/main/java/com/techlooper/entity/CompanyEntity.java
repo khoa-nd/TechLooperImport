@@ -49,6 +49,14 @@ public class CompanyEntity {
     @Field
     private Set<Industry> industries;
 
+    @Field
+    private Set<String> jobImageURLs;
+
+    @Field
+    private Set<String> jobVideoURLs;
+
+    private int score;
+
     public Long getCompanyId() {
         return companyId;
     }
@@ -129,6 +137,30 @@ public class CompanyEntity {
         this.industries = industries;
     }
 
+    public Set<String> getJobImageURLs() {
+        return jobImageURLs;
+    }
+
+    public void setJobImageURLs(Set<String> jobImageURLs) {
+        this.jobImageURLs = jobImageURLs;
+    }
+
+    public Set<String> getJobVideoURLs() {
+        return jobVideoURLs;
+    }
+
+    public void setJobVideoURLs(Set<String> jobVideoURLs) {
+        this.jobVideoURLs = jobVideoURLs;
+    }
+
+    public int getScore() {
+        return score;
+    }
+
+    public void setScore(int score) {
+        this.score = score;
+    }
+
     public void addBenefit(Set<Benefit> benefits) {
         if (this.benefits == null) {
             this.benefits = new HashSet<>();
@@ -162,5 +194,19 @@ public class CompanyEntity {
             this.industries = new HashSet<>();
         }
         this.industries.addAll(industries);
+    }
+
+    public void addJobImageURL(List<String> jobImageURLs) {
+        if (this.jobImageURLs == null) {
+            this.jobImageURLs = new HashSet<>();
+        }
+        this.jobImageURLs.addAll(jobImageURLs);
+    }
+
+    public void addJobVideoURL(List<String> jobVideoURLs) {
+        if (this.jobVideoURLs == null) {
+            this.jobVideoURLs = new HashSet<>();
+        }
+        this.jobVideoURLs.addAll(jobVideoURLs);
     }
 }

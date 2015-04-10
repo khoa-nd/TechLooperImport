@@ -4,6 +4,8 @@ import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Field;
 
+import java.util.List;
+
 /**
  * Created by NguyenDangKhoa on 4/1/15.
  */
@@ -27,6 +29,12 @@ public class VietnamworksCompanyEntity {
 
     @Field
     private String address;
+
+    @Field
+    private List<String> jobImageURLs;
+
+    @Field
+    private List<String> jobVideoURLs;
 
     public Long getCompanyId() {
         return companyId;
@@ -74,5 +82,21 @@ public class VietnamworksCompanyEntity {
 
     public void setAddress(String address) {
         this.address = address;
+    }
+
+    public List<String> getJobImageURLs() {
+        return jobImageURLs;
+    }
+
+    public void setJobImageURLs(List<String> jobImageURLs) {
+        this.jobImageURLs = jobImageURLs;
+    }
+
+    public List<String> getJobVideoURLs() {
+        return jobVideoURLs;
+    }
+
+    public void setJobVideoURLs(List<String> jobVideoURLs) {
+        this.jobVideoURLs = jobVideoURLs;
     }
 }
