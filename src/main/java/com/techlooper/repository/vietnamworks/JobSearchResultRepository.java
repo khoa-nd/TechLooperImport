@@ -10,5 +10,5 @@ import org.springframework.stereotype.Repository;
  * Created by khoanguyendang on 01/04/15.
  */
 @Repository
-public interface JobSearchResultRepository extends ElasticsearchRepository<JobEntity, String> {
+public interface JobSearchResultRepository extends ElasticsearchRepository<JobEntity, Long> {
 }

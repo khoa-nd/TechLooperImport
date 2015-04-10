@@ -1,13 +1,11 @@
 package com.techlooper.pojo;
 
-import java.util.Date;
-
 /**
  * Created by NguyenDangKhoa on 4/1/15.
  */
 public class Job {
 
-    private String jobId;
+    private Long jobId;
 
     private String jobTitle;
 
@@ -15,21 +13,27 @@ public class Job {
 
     private String expiredDate;
 
+    private long numOfViews;
+
+    private long numOfApplications;
+
     public Job() {
     }
 
-    public Job(String jobId, String jobTitle, String jobURL, String expiredDate) {
+    public Job(Long jobId, String jobTitle, String jobURL, String expiredDate, long numOfViews, long numOfApplications) {
         this.jobId = jobId;
         this.jobTitle = jobTitle;
         this.jobURL = jobURL;
         this.expiredDate = expiredDate;
+        this.numOfViews = numOfViews;
+        this.numOfApplications = numOfApplications;
     }
 
-    public String getJobId() {
+    public Long getJobId() {
         return jobId;
     }
 
-    public void setJobId(String jobId) {
+    public void setJobId(Long jobId) {
         this.jobId = jobId;
     }
 
@@ -55,6 +59,22 @@ public class Job {
 
     public void setExpiredDate(String expiredDate) {
         this.expiredDate = expiredDate;
+    }
+
+    public long getNumOfViews() {
+        return numOfViews;
+    }
+
+    public void setNumOfViews(long numOfViews) {
+        this.numOfViews = numOfViews;
+    }
+
+    public long getNumOfApplications() {
+        return numOfApplications;
+    }
+
+    public void setNumOfApplications(long numOfApplications) {
+        this.numOfApplications = numOfApplications;
     }
 
     @Override
