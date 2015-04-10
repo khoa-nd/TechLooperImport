@@ -17,10 +17,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Created by NguyenDangKhoa on 4/1/15.
@@ -55,7 +52,9 @@ public class CompanyService {
             existCompany.getJobs().removeAll(company.getJobs());
             existCompany.addJob(tmp);
             existCompany.addIndustry(company.getIndustries());
+            company.getJobImageURLs().removeAll(Arrays.asList(null, ""));
             existCompany.addJobImageURL(new ArrayList<>(company.getJobImageURLs()));
+            company.getJobVideoURLs().removeAll(Arrays.asList(null, ""));
             existCompany.addJobVideoURL(new ArrayList<>(company.getJobVideoURLs()));
         }
 
