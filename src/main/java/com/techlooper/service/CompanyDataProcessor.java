@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static org.elasticsearch.index.query.QueryBuilders.nestedQuery;
@@ -52,7 +53,9 @@ public class CompanyDataProcessor {
                 companyEntity.setCompanySizeId(vietnamworksCompanyEntity.getCompanySizeId());
                 companyEntity.setWebsite(vietnamworksCompanyEntity.getWebsite());
                 companyEntity.setAddress(vietnamworksCompanyEntity.getAddress());
+                vietnamworksCompanyEntity.getJobImageURLs().removeAll(Arrays.asList(null, ""));
                 companyEntity.addJobImageURL(vietnamworksCompanyEntity.getJobImageURLs());
+                vietnamworksCompanyEntity.getJobVideoURLs().removeAll(Arrays.asList(null, ""));
                 companyEntity.addJobVideoURL(vietnamworksCompanyEntity.getJobVideoURLs());
             }
         } catch (Exception ex) {
