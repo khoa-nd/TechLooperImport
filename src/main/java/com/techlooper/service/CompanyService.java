@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Created by NguyenDangKhoa on 4/1/15.
@@ -76,6 +77,9 @@ public class CompanyService {
             for (JobEntity jobEntity : jobEntities) {
                 try {
                     CompanyEntity companyEntity = companyDataProcessor.process(jobEntity);
+                    if (companyEntity.getSkills().isEmpty()) {
+                        updateSkillFromSimilarJob(companyEntity);
+                    }
                     addCompany(companyEntity);
                     LOGGER.info("Import " + companyEntity.getCompanyName() + " OK.");
                     successCompanyAdd++;
@@ -175,5 +179,19 @@ public class CompanyService {
             skills.add(newSkill);
         }
         skills.remove(skill);
+    }
+
+
+
+    private void updateSkillFromSimilarJob(CompanyEntity companyEntity) {
+        int LIMIT_NUMBER_OF_SKILLS = 5;
+        List<JobEntity> similarJobs = jobSearchService.getSimilarJob(companyEntity.getJobs(), 0);
+        if (!similarJobs.isEmpty()) {
+            Set<Skill> similarSkills = new HashSet<>();
+            for(JobEntity jobEntity : similarJobs) {
+                similarSkills.addAll(jobEntity.getSkills());
+            }
+            companyEntity.setSkills(similarSkills.stream().limit(LIMIT_NUMBER_OF_SKILLS).collect(Collectors.toSet()));
+        }
     }
 }

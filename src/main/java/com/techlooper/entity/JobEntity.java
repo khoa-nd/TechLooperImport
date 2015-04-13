@@ -48,6 +48,12 @@ public class JobEntity {
     @Field
     private long numOfApplications;
 
+    @Field
+    private int companySizeId;
+
+    @Field
+    private String address;
+
     public Long getJobId() {
         return jobId;
     }
@@ -126,5 +132,21 @@ public class JobEntity {
 
     public void setNumOfApplications(long numOfApplications) {
         this.numOfApplications = numOfApplications;
+    }
+
+    public int getCompanySizeId() {
+        return companySizeId;
+    }
+
+    public void setCompanySizeId(int companySizeId) {
+        this.companySizeId = companySizeId;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
     }
 }

@@ -1,7 +1,11 @@
 package com.techlooper.service;
 
 import com.techlooper.entity.JobEntity;
+import com.techlooper.pojo.Job;
+import com.techlooper.repository.vietnamworks.JobSearchResultRepository;
+import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.FilterBuilders;
+import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -13,8 +17,9 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.List;
+import java.util.Set;
 
-import static org.elasticsearch.index.query.QueryBuilders.nestedQuery;
+import static org.elasticsearch.index.query.QueryBuilders.*;
 
 /**
  * Created by NguyenDangKhoa on 4/1/15.
@@ -29,6 +34,9 @@ public class JobSearchService {
 
     @Resource
     private ElasticsearchTemplate elasticsearchTemplateVietnamworks;
+
+    @Resource
+    private JobSearchResultRepository jobSearchResultRepository;
 
     public List<JobEntity> getITJob(int pageIndex) {
         SearchQuery searchQuery = getITJobSearchQuery(pageIndex);
@@ -54,18 +62,49 @@ public class JobSearchService {
         return jobEntities.getContent();
     }
 
+    public List<JobEntity> getSimilarJob(Set<Job> originalJobs, int pageIndex) {
+        final int TOP_NUMBER_OF_JOBS = 3;
+        NativeSearchQueryBuilder searchQueryBuilder = new NativeSearchQueryBuilder();
+        // They should be IT-Software jobs
+        BoolQueryBuilder boolQueryBuilder = boolQuery().should(termQuery("industries.industryId", 35));
+        originalJobs.stream().limit(TOP_NUMBER_OF_JOBS).forEach(job -> {
+                    JobEntity vietnamworksJob = jobSearchResultRepository.findOne(job.getJobId());
+                    // They should match original top 3 job's titles
+                    boolQueryBuilder.should(matchQuery("jobTitle", vietnamworksJob.getJobTitle()));
+                    // They should be the same as company size
+                    boolQueryBuilder.should(termQuery("companySizeId", vietnamworksJob.getCompanySizeId()));
+                    // They should match original job's company address
+                    boolQueryBuilder.should(termQuery("address", vietnamworksJob.getAddress()));
+                });
+        // The query should match at least 2 conditions
+        boolQueryBuilder.minimumNumberShouldMatch(2);
+
+        searchQueryBuilder.withQuery(boolQueryBuilder);
+        searchQueryBuilder.withFilter(FilterBuilders.rangeFilter("approvedDate").from("now-3w"));
+        searchQueryBuilder.withPageable(new PageRequest(pageIndex, TOTAL_USER_PER_PAGE));
+
+        Page<JobEntity> jobEntities = elasticsearchTemplateVietnamworks.queryForPage(searchQueryBuilder.build(), JobEntity.class);
+        return jobEntities.getContent();
+    }
+
     private SearchQuery getITJobSearchQuery(int pageIndex) {
-        NativeSearchQueryBuilder searchQueryBuilder = new NativeSearchQueryBuilder()
-                .withQuery(nestedQuery("industries", QueryBuilders.boolQuery()
-                        .minimumNumberShouldMatch(1)
-                        .should(QueryBuilders.termQuery("industries.industryId", 35))))
-                .withPageable(new PageRequest(pageIndex, TOTAL_USER_PER_PAGE));
+        NativeSearchQueryBuilder searchQueryBuilder = getNativeSearchQueryBuilderITJob();
+
         if (isImportAll) {
             searchQueryBuilder.withFilter(FilterBuilders.matchAllFilter());
         } else {
             searchQueryBuilder.withFilter(FilterBuilders.rangeFilter("approvedDate").from("now-1w"));
         }
+
+        searchQueryBuilder.withPageable(new PageRequest(pageIndex, TOTAL_USER_PER_PAGE));
         return searchQueryBuilder.build();
+    }
+
+    private NativeSearchQueryBuilder getNativeSearchQueryBuilderITJob() {
+        return new NativeSearchQueryBuilder()
+                    .withQuery(nestedQuery("industries", QueryBuilders.boolQuery()
+                            .minimumNumberShouldMatch(1)
+                            .should(QueryBuilders.termQuery("industries.industryId", 35))));
     }
 
     private SearchQuery getJobHasBenefitSearchQuery(int pageIndex) {
