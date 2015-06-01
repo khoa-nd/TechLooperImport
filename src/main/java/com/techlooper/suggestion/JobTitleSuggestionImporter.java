@@ -23,7 +23,7 @@ public class JobTitleSuggestionImporter {
     @Resource
     private JobTitleSuggestionIndexer jobTitleSuggestionIndexer;
 
-    public void importJobTitle() {
+    public void importJobTitle() throws Exception {
         int totalNumberOfUsers = jobTitleReader.getTotalNumberOfRegistrationUsers();
         int totalNumberOfPages = totalNumberOfUsers % MAX_ITEM_PER_PAGE == 0 ?  totalNumberOfUsers / MAX_ITEM_PER_PAGE :
                 totalNumberOfUsers / MAX_ITEM_PER_PAGE + 1;
@@ -32,6 +32,7 @@ public class JobTitleSuggestionImporter {
             List<String> jobTitles = jobTitleReader.readJobTitle(pageIndex * MAX_ITEM_PER_PAGE, MAX_ITEM_PER_PAGE);
             jobTitleSuggestionIndexer.index(jobTitles);
             pageIndex++;
+            Thread.sleep(3000);
         }
     }
 }

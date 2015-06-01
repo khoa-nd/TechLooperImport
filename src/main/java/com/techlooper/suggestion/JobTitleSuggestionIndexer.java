@@ -23,7 +23,9 @@ public class JobTitleSuggestionIndexer {
                 jobTitle -> new JobTitleSuggestionEntityBuilder(jobTitle)
                                 .suggest(new String[]{jobTitle}, jobTitle).buildIndex()).collect(Collectors.toList());
 
-        elasticsearchTemplateVietnamworks.bulkIndex(indexQueries);
-        elasticsearchTemplateVietnamworks.refresh(JobTitleSuggestionEntity.class, true);
+        if (!indexQueries.isEmpty()) {
+            elasticsearchTemplateVietnamworks.bulkIndex(indexQueries);
+            elasticsearchTemplateVietnamworks.refresh(JobTitleSuggestionEntity.class, true);
+        }
     }
 }

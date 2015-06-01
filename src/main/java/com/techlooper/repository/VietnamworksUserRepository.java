@@ -24,7 +24,7 @@ public class VietnamworksUserRepository {
     private final String totalUserSqlQuery = "select count(distinct resumeid) from tblresume_industry where industryid = 35";
     private final String getResumeListSqlQuery = "select resumeid from tblresume_industry where industryid = 35 limit ?, ?";
     private final String totalRegisteredUserSqlQuery = "SELECT COUNT(userid) FROM tblregistrationinfo";
-    private final String getJobTitleQuery = "SELECT DISTINCT jobTitle FROM tblregistrationinfo WHERE jobTitle IS NOT NULL LIMIT ?, ?";
+    private final String getJobTitleQuery = "SELECT DISTINCT jobTitle FROM tblregistrationinfo WHERE jobTitle IS NOT NULL and jobTitle <> '' LIMIT ?, ?";
 
 
     public int getTotalUser() {
