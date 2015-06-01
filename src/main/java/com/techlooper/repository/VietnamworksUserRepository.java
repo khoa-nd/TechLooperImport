@@ -23,6 +23,9 @@ public class VietnamworksUserRepository {
     private final String resumeSqlQuery = "select r.* from tblresume r inner join tblregistrationinfo i on r.userid = i.userid where resumeid in (:resumeIds) and i.isactive = 1";
     private final String totalUserSqlQuery = "select count(distinct resumeid) from tblresume_industry where industryid = 35";
     private final String getResumeListSqlQuery = "select resumeid from tblresume_industry where industryid = 35 limit ?, ?";
+    private final String totalRegisteredUserSqlQuery = "SELECT COUNT(userid) FROM tblregistrationinfo";
+    private final String getJobTitleQuery = "SELECT DISTINCT jobTitle FROM tblregistrationinfo WHERE jobTitle IS NOT NULL LIMIT ?, ?";
+
 
     public int getTotalUser() {
         return jdbcTemplate.queryForInt(totalUserSqlQuery);
@@ -40,4 +43,11 @@ public class VietnamworksUserRepository {
                 new BeanPropertyRowMapper<VietnamworksUser>(VietnamworksUser.class));
     }
 
+    public int getTotalNumberOfRegistrationUsers() {
+        return jdbcTemplate.queryForInt(totalRegisteredUserSqlQuery);
+    }
+
+    public List<String> getJobTitles(int fromIndex, int pageSize) {
+        return jdbcTemplate.queryForList(getJobTitleQuery, String.class, fromIndex, pageSize);
+    }
 }

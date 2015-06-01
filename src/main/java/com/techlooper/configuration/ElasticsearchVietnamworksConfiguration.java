@@ -16,7 +16,7 @@ import javax.annotation.Resource;
  * Created by NguyenDangKhoa on 28/01/15.
  */
 @Configuration
-@ComponentScan(basePackages = "com.techlooper.service")
+@ComponentScan(basePackages = "com.techlooper")
 @EnableElasticsearchRepositories(basePackages = "com.techlooper.repository.vietnamworks",
         elasticsearchTemplateRef = "elasticsearchTemplateVietnamworks")
 @PropertySources({

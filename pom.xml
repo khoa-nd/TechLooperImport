@@ -30,7 +30,7 @@
         <logback.version>1.1.2</logback.version>
         <groovy.version>2.3.5</groovy.version>
         <spring-data-jpa.version>1.7.0.RELEASE</spring-data-jpa.version>
-        <spring-data-elasticsearch>1.1.0.RELEASE</spring-data-elasticsearch>
+        <spring-data-elasticsearch>1.2.0.BUILD-SNAPSHOT</spring-data-elasticsearch>
         <commons-lang3.version>3.3.2</commons-lang3.version>
     </properties>
 
@@ -185,6 +185,11 @@
             <name>Parancoe Repository for Maven</name>
             <url>http://maven2.parancoe.org/repo</url>
             <layout>default</layout>
+        </repository>
+        <repository>
+            <id>spring-libs-snapshot</id>
+            <name>Spring Snapshot Repository</name>
+            <url>http://repo.spring.io/libs-snapshot</url>
         </repository>
     </repositories>
 
